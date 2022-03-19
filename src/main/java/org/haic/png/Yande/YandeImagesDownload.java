@@ -41,10 +41,10 @@ public class YandeImagesDownload {
 		for (int i = 0; i < len; i++) {
 			String whitelabel = whitelabel_lists.get(i);
 			System.out.print("正在下载 Yande 标签白名单图片,当前标签: " + whitelabel + " 进度：" + (i + 1) + "/" + len);
-			Map<String, String> imagesInfo = YandeSubfunction.GetLabelImagesInfo(whitelabel);
+			Map<String, Map<String, String>> imagesInfo = YandeSubfunction.GetLabelImagesInfo(whitelabel);
 			System.out.println(" 图片数量：" + imagesInfo.size() + " 存储路径: " + image_folderPath);
 			ExecutorService executorService = Executors.newFixedThreadPool(MAX_THREADS); // 限制多线程
-			for (Map.Entry<String, String> imageInfo : imagesInfo.entrySet()) { // 下载
+			for (Map.Entry<String, Map<String, String>> imageInfo : imagesInfo.entrySet()) { // 下载
 				executorService.execute(new Thread(() -> { // 程序
 					YandeSubfunction.download(imageInfo.getKey(), imageInfo.getValue());
 				}));
@@ -73,10 +73,10 @@ public class YandeImagesDownload {
 			int month = currentDate.getMonthValue();
 			int day = currentDate.getDayOfMonth();
 			System.out.print("正在下载每日热门图片,当前日期 : " + year + "-" + month + "-" + day);
-			Map<String, String> imageInfos = YandeSubfunction.GetHeatdayImagesInfo(year, month, day);
+			Map<String, Map<String, String>> imageInfos = YandeSubfunction.GetHeatdayImagesInfo(year, month, day);
 			System.out.println(" 图片数量：" + imageInfos.size() + " 存储路径: " + image_folderPath);
 			ExecutorService executorService = Executors.newFixedThreadPool(MAX_THREADS); // 限制多线程
-			for (Map.Entry<String, String> imageInfo : imageInfos.entrySet()) { // 下载
+			for (Map.Entry<String, Map<String, String>> imageInfo : imageInfos.entrySet()) { // 下载
 				executorService.execute(new Thread(() -> {// 执行多线程程
 					YandeSubfunction.download(imageInfo.getKey(), imageInfo.getValue());
 				}));

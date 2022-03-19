@@ -1,14 +1,26 @@
 package org.haic.png.Yande;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
+
 import org.haic.often.FilesUtils;
 import org.haic.often.Judge;
+import org.haic.often.ReadWriteUtils;
 import org.haic.often.Multithread.MultiThreadUtils;
 import org.haic.often.Multithread.ParameterizedThread;
 import org.haic.often.Network.HttpStatus;
 import org.haic.often.Network.JsoupUtil;
 import org.haic.often.Network.NetworkFileUtil;
 import org.haic.often.Network.URIUtils;
-import org.haic.often.ReadWriteUtils;
 import org.haic.png.App;
 import org.haic.png.ChildRout;
 import org.jsoup.nodes.Document;
@@ -16,13 +28,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 
 public class YandeSubfunction {
 
@@ -45,7 +50,6 @@ public class YandeSubfunction {
 	private static boolean isInitialization; // 判断参数是否已初始化
 
 	public static Map<String, String> cookies = new HashMap<>();
-	public static Map<String, String> filesMd5 = new HashMap<>();
 
 	public static List<String> blacklabels = new ArrayList<>();
 	public static List<String> usedIds = new CopyOnWriteArrayList<>();
@@ -57,36 +61,37 @@ public class YandeSubfunction {
 			cookies = YandeLogin.GetCookies();
 			blacklabels = ReadWriteUtils.orgin(blacklabelFilePath).list();
 			blacklabels.replaceAll(label -> label.replaceAll(" ", "_"));
-			usedIds = ReadWriteUtils.orgin(alreadyUsedIdFilePath).list().parallelStream().map(info -> info.split(" ")[0]).collect(Collectors.toList());
+			usedIds = ReadWriteUtils.orgin(alreadyUsedIdFilePath).list().parallelStream()
+					.map(info -> info.split(" ")[0]).collect(Collectors.toList());
 			isInitialization = true;
 		}
 	}
 
-	public static Map<String, String> GetLabelImagesInfo(String whitelabel) {
-		Map<String, String> imagesInfo = new ConcurrentHashMap<>();
+	public static Map<String, Map<String, String>> GetLabelImagesInfo(String whitelabel) {
+		Map<String, Map<String, String>> imagesInfo = new ConcurrentHashMap<>();
 		String url = "https://yande.re/post.xml?tags=" + whitelabel + "&limit=1";
-		Document doc = JsoupUtil.connect(url).proxy(proxyHost, proxyPort).cookies(cookies).retry(MAX_RETRY, MILLISECONDS_SLEEP).get();
+		Document doc = JsoupUtil.connect(url).proxy(proxyHost, proxyPort).cookies(cookies)
+				.retry(MAX_RETRY, MILLISECONDS_SLEEP).get();
 		int postCount = Integer.parseInt(Objects.requireNonNull(doc.selectFirst("posts")).attr("count"));
 		ExecutorService executorService = Executors.newFixedThreadPool(API_MAX_THREADS); // 限制多线程
-		for (int i = 1; i <= (int) Math.ceil((double) postCount / (double) limit); i++, MultiThreadUtils.WaitForThread(36)) {
+		for (int i = 1; i <= (int) Math.ceil((double) postCount / (double) limit); i++, MultiThreadUtils
+				.WaitForThread(36)) {
 			executorService.execute(new ParameterizedThread<>(i, (index) -> { // 执行多线程程
-				String whitelabelUrl = "https://yande.re/post.xml?tags=" + whitelabel + "&page=" + index + "&limit=" + limit;
-				Elements posts = JsoupUtil.connect(whitelabelUrl).proxy(proxyHost, proxyPort).cookies(cookies).retry(MAX_RETRY, MILLISECONDS_SLEEP).get()
+				String whitelabelUrl = "https://yande.re/post.xml?tags=" + whitelabel + "&page=" + index + "&limit="
+						+ limit;
+				Elements posts = JsoupUtil.connect(whitelabelUrl).proxy(proxyHost, proxyPort).cookies(cookies)
+						.retry(MAX_RETRY, MILLISECONDS_SLEEP).get()
 						.select("post");
-				forPosts:
 				for (Element post : posts) {
 					String imageid = post.attr("id");
 					if (bypass_usedid && usedIds.contains(imageid)) {
 						continue;
 					}
-					String[] image_labels = post.attr("tags").split(" ");
-					for (String image_label : image_labels) {
-						if (bypass_blacklabels && blacklabels.contains(image_label)) {
-							continue forPosts;
-						}
+					if (bypass_blacklabels
+							&& Arrays.stream(post.attr("tags").split(" ")).anyMatch(l -> blacklabels.contains(l))) {
+						continue;
 					}
-					filesMd5.put(imageid, post.attr("md5"));
-					imagesInfo.put(imageid, post.attr("file_url"));
+					imagesInfo.put(imageid, getImageInfo(post));
 				}
 			}));
 		}
@@ -94,19 +99,20 @@ public class YandeSubfunction {
 		return new HashMap<>(imagesInfo);
 	}
 
-	public static Map<String, String> GetParentImagesInfo(String parentImageId) {
+	public static Map<String, Map<String, String>> GetParentImagesInfo(String parentImageId) {
 		return GetParentImagesInfo(parentImageId, new ArrayList<>());
 	}
 
-	public static Map<String, String> GetParentImagesInfo(String parentImageId, List<String> childrenImageidLists) {
-		Map<String, String> imagesInfo = new HashMap<>();
+	public static Map<String, Map<String, String>> GetParentImagesInfo(String parentImageId,
+			List<String> childrenImageidLists) {
+		Map<String, Map<String, String>> imagesInfo = new HashMap<>();
 		String parentIdUrl = "https://yande.re/post.xml?tags=parent%3A" + parentImageId + "&limit=" + limit;
-		Document doc = JsoupUtil.connect(parentIdUrl).proxy(proxyHost, proxyPort).cookies(cookies).retry(MAX_RETRY, MILLISECONDS_SLEEP).get();
+		Document doc = JsoupUtil.connect(parentIdUrl).proxy(proxyHost, proxyPort).cookies(cookies)
+				.retry(MAX_RETRY, MILLISECONDS_SLEEP).get();
 		if (Judge.isNull(doc)) {
 			System.out.println("连接URL失败：" + parentIdUrl);
 			return imagesInfo;
 		}
-		forPosts:
 		for (Element post : doc.select("post")) {
 			String imageid = post.attr("id");
 			if (imageid.equals(parentImageId) && !childrenImageidLists.contains(parentImageId)) {
@@ -116,28 +122,36 @@ public class YandeSubfunction {
 					return GetParentImagesInfo(new_parent_imageid, childrenImageidLists);
 				}
 			}
-			String[] image_labels = post.attr("tags").split(" ");
-			for (String image_label : image_labels) {
-				if (bypass_blacklabels && blacklabels.contains(image_label)) {
-					continue forPosts;
-				}
+			if (bypass_blacklabels
+					&& Arrays.stream(post.attr("tags").split(" ")).anyMatch(l -> blacklabels.contains(l))) {
+				continue;
 			}
 			if (bypass_usedid && usedIds.contains(imageid)) {
 				continue;
 			}
 			String imageUrl = post.attr("file_url");
 			if (!Judge.isEmpty(imageUrl)) {
-				filesMd5.put(imageid, post.attr("md5"));
-				imagesInfo.put(imageid, imageUrl);
+				imagesInfo.put(imageid, getImageInfo(post));
 			}
 		}
 		return imagesInfo;
 	}
 
-	public static Map<String, String> GetHeatdayImagesInfo(int year, int month, int day) {
+	private static Map<String, String> getImageInfo(Element post) {
+		Map<String, String> imageInfo = new HashMap<>();
+		imageInfo.put("md5", post.attr("md5"));
+		imageInfo.put("file_size", post.attr("file_size"));
+		imageInfo.put("author", post.attr("author"));
+		imageInfo.put("source", post.attr("source"));
+		imageInfo.put("file_url", post.attr("file_url"));
+		return imageInfo;
+	}
+
+	public static Map<String, Map<String, String>> GetHeatdayImagesInfo(int year, int month, int day) {
 		String heatdayUrl = "https://yande.re/post/popular_by_day.xml?day=" + day + "&month=" + month + "&year=" + year;
-		Map<String, String> imagesInfo = new ConcurrentHashMap<>();
-		Document doc = JsoupUtil.connect(heatdayUrl).proxy(proxyHost, proxyPort).cookies(cookies).retry(MAX_RETRY, MILLISECONDS_SLEEP).get();
+		Map<String, Map<String, String>> imagesInfo = new ConcurrentHashMap<>();
+		Document doc = JsoupUtil.connect(heatdayUrl).proxy(proxyHost, proxyPort).cookies(cookies)
+				.retry(MAX_RETRY, MILLISECONDS_SLEEP).get();
 		if (Judge.isNull(doc)) {
 			System.out.println("连接URL失败：" + heatdayUrl);
 			return imagesInfo;
@@ -146,19 +160,19 @@ public class YandeSubfunction {
 		for (Element post : doc.select("post")) { // 执行多线程程序
 			executorService.execute(new Thread(() -> { // 程序
 				String imageid = post.attr("id");
-				for (String imagelabel : post.attr("tags").split(" ")) {
-					if (bypass_blacklabels && blacklabels.contains(imagelabel)) {
-						return;
-					}
+				if (bypass_blacklabels
+						&& Arrays.stream(post.attr("tags").split(" ")).anyMatch(l -> blacklabels.contains(l))) {
+					return;
 				}
 				String parentImageid = post.attr("parent_id");
 				if (!parentImageid.equals("")) {
-					Map<String, String> parent_imageInfos = YandeSubfunction.GetParentImagesInfo(parentImageid);
+					Map<String, Map<String, String>> parent_imageInfos = YandeSubfunction
+							.GetParentImagesInfo(parentImageid);
 					if (!parent_imageInfos.isEmpty()) {
 						imagesInfo.putAll(parent_imageInfos);
 					}
 				} else if (Boolean.parseBoolean(post.attr("has_children"))) {
-					Map<String, String> parent_imageInfos = YandeSubfunction.GetParentImagesInfo(imageid);
+					Map<String, Map<String, String>> parent_imageInfos = YandeSubfunction.GetParentImagesInfo(imageid);
 					if (!parent_imageInfos.isEmpty()) {
 						imagesInfo.putAll(parent_imageInfos);
 					}
@@ -168,8 +182,7 @@ public class YandeSubfunction {
 					}
 					String imageUrl = post.attr("file_url");
 					if (!Judge.isEmpty(imageUrl)) {
-						filesMd5.put(imageid, post.attr("md5"));
-						imagesInfo.put(imageid, imageUrl);
+						imagesInfo.put(imageid, getImageInfo(post));
 					}
 				}
 			}));
@@ -178,15 +191,18 @@ public class YandeSubfunction {
 		return new HashMap<>(imagesInfo);
 	}
 
-	public static void download(String imageid, String imageUrl) {
+	public static void download(String imageid, Map<String, String> imageInfo) {
 		String imageidUrl = "https://yande.re/post/show/" + imageid;
 		logger.info("Yande - 正在下载 ID: " + imageid + " URL: " + imageidUrl);
 		usedIds.add(imageid);
-		int statusCode = NetworkFileUtil.connect(imageUrl).proxy(proxyHost, proxyPort).hash(filesMd5.get(imageid)).retry(MAX_RETRY, MILLISECONDS_SLEEP)
-				.multithread(DOWN_THREADS).download(image_folderPath);
+		String imageUrl = imageInfo.get("file_url");
+		String md5 = imageInfo.get("md5");
+		NetworkFileUtil config = NetworkFileUtil.connect(imageUrl).proxy(proxyHost, proxyPort).hash(md5)
+				.retry(MAX_RETRY, MILLISECONDS_SLEEP)
+				.multithread(DOWN_THREADS);
+		int statusCode = config.download(image_folderPath);
 		if (statusCode == HttpStatus.SC_TOO_MANY_REQUEST) {
-			statusCode = NetworkFileUtil.connect(imageUrl).proxy(proxyHost, proxyPort).retry(MAX_RETRY, MILLISECONDS_SLEEP).header("accept-encoding", "")
-					.hash(filesMd5.get(imageid)).multithread(DOWN_THREADS).download(image_folderPath);
+			statusCode = config.header("accept-encoding", "").download(image_folderPath);
 			if (statusCode == HttpStatus.SC_TOO_MANY_REQUEST) {
 				System.out.println("Error: 429 URL: " + imageUrl);
 				System.exit(1);
@@ -195,7 +211,7 @@ public class YandeSubfunction {
 		if (URIUtils.statusIsOK(statusCode)) {
 			App.imageCount.addAndGet(1);
 			if (record_usedid) {
-				ChildRout.WriteFileInfo(imageid + " " + filesMd5.get(imageid), alreadyUsedIdFilePath);
+				ChildRout.WriteFileInfo(imageid + " " + md5, alreadyUsedIdFilePath);
 			}
 		} else {
 			logger.error("Yande - 下载失败 ID: " + imageid + " URL: " + imageidUrl);

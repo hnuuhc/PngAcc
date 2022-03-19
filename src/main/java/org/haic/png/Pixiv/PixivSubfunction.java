@@ -1,31 +1,38 @@
 package org.haic.png.Pixiv;
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
-import org.apache.http.HttpStatus;
-import org.haic.often.FilesUtils;
-import org.haic.often.Judge;
-import org.haic.often.Multithread.MultiThreadUtils;
-import org.haic.often.Multithread.ParameterizedThread;
-import org.haic.often.Network.JsoupUtil;
-import org.haic.often.Network.NetworkFileUtil;
-import org.haic.often.Network.URIUtils;
-import org.haic.often.ReadWriteUtils;
-import org.haic.often.StringUtils;
-import org.haic.often.Tuple.ThreeTuple;
-import org.haic.often.Tuple.TupleUtil;
-import org.haic.png.App;
-import org.haic.png.ChildRout;
-import org.jsoup.Connection;
-import org.jsoup.nodes.Document;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+
+import org.apache.http.HttpStatus;
+import org.haic.often.FilesUtils;
+import org.haic.often.Judge;
+import org.haic.often.ReadWriteUtils;
+import org.haic.often.StringUtils;
+import org.haic.often.Multithread.MultiThreadUtils;
+import org.haic.often.Multithread.ParameterizedThread;
+import org.haic.often.Network.JsoupUtil;
+import org.haic.often.Network.Method;
+import org.haic.often.Network.NetworkFileUtil;
+import org.haic.often.Network.URIUtils;
+import org.haic.often.Tuple.ThreeTuple;
+import org.haic.often.Tuple.Tuple;
+import org.haic.png.App;
+import org.haic.png.ChildRout;
+import org.jsoup.nodes.Document;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PixivSubfunction {
 
@@ -68,24 +75,32 @@ public class PixivSubfunction {
 			blacklabels.replaceAll(label -> label.replaceAll(" ", "_"));
 			usedIds = ReadWriteUtils.orgin(alreadyUsedIdFilePath).list();
 			x_csrf_token = JSONObject.parseObject(Objects.requireNonNull(
-					JsoupUtil.connect(domain).cookies(cookies).proxy(proxyHost, proxyPort).retry(MAX_RETRY, MILLISECONDS_SLEEP).get()
-							.selectFirst("meta[id='meta-global-data']")).attr("content")).getString("token");
+					JsoupUtil.connect(domain).cookies(cookies).proxy(proxyHost, proxyPort)
+							.retry(MAX_RETRY, MILLISECONDS_SLEEP).get()
+							.selectFirst("meta[id='meta-global-data']"))
+					.attr("content")).getString("token");
 			isInitialization = true;
 		}
 	}
 
 	public static Set<ThreeTuple<String, List<String>, String>> GetLabelImagesInfo(String whitelabel) {
-		String label_api_url = "https://www.pixiv.net/ajax/search/artworks/" + whitelabel + "?mode=all&s_mode=s_tag_full&type=illust"; // API接口
-		Document doc = JsoupUtil.connect(label_api_url).proxy(proxyHost, proxyPort).cookies(cookies).retry(MAX_RETRY, MILLISECONDS_SLEEP).get();
-		JSONObject illustManga = JSONObject.parseObject(JSONObject.parseObject(JSONObject.parseObject(doc.text()).getString("body")).getString("illustManga"));
-		Set<ThreeTuple<String, List<String>, String>> imagesInfo = PixivSubfunction.imageInfosOfJSONArray(illustManga.getJSONArray("data"));
+		String label_api_url = "https://www.pixiv.net/ajax/search/artworks/" + whitelabel
+				+ "?mode=all&s_mode=s_tag_full&type=illust"; // API接口
+		Document doc = JsoupUtil.connect(label_api_url).proxy(proxyHost, proxyPort).cookies(cookies)
+				.retry(MAX_RETRY, MILLISECONDS_SLEEP).get();
+		JSONObject illustManga = JSONObject.parseObject(
+				JSONObject.parseObject(JSONObject.parseObject(doc.text()).getString("body")).getString("illustManga"));
+		Set<ThreeTuple<String, List<String>, String>> imagesInfo = PixivSubfunction
+				.imageInfosOfJSONArray(illustManga.getJSONArray("data"));
 		int total = Integer.parseInt(illustManga.getString("total")); // 获取图片数量
 		ExecutorService executorService = Executors.newFixedThreadPool(MAX_API); // 限制多线程
 		for (int i = 2; i <= (int) Math.ceil((double) total / (double) 60); i++) { // limit=60为固定值
 			executorService.execute(new ParameterizedThread<>(i, (index) -> { // 执行多线程程
-				String url = "https://www.pixiv.net/ajax/search/artworks/" + whitelabel + "?mode=all&s_mode=s_tag_full&type=illust&p=" + index;
+				String url = "https://www.pixiv.net/ajax/search/artworks/" + whitelabel
+						+ "?mode=all&s_mode=s_tag_full&type=illust&p=" + index;
 				JSONArray data = JSONObject.parseObject(JSONObject.parseObject(JSONObject.parseObject(
-								JsoupUtil.connect(url).proxy(proxyHost, proxyPort).cookies(cookies).retry(MAX_RETRY, MILLISECONDS_SLEEP).get().text())
+						JsoupUtil.connect(url).proxy(proxyHost, proxyPort).cookies(cookies)
+								.retry(MAX_RETRY, MILLISECONDS_SLEEP).get().text())
 						.getString("body")).getString("illustManga")).getJSONArray("data");// 获取数组
 				imagesInfo.addAll(imageInfosOfJSONArray(data));
 			}));
@@ -98,7 +113,8 @@ public class PixivSubfunction {
 		// Set<ThreeTuple<图片ID,下载链接列表,文件名>>
 		String url = "https://www.pixiv.net/ajax/user/" + uid + "/profile/all?lang=zh"; // API接口
 		Set<ThreeTuple<String, List<String>, String>> imagesInfo = new HashSet<>();
-		Document doc = JsoupUtil.connect(url).proxy(proxyHost, proxyPort).cookies(cookies).retry(MAX_RETRY, MILLISECONDS_SLEEP).get();
+		Document doc = JsoupUtil.connect(url).proxy(proxyHost, proxyPort).cookies(cookies)
+				.retry(MAX_RETRY, MILLISECONDS_SLEEP).get();
 		JSONObject illusts;
 		try {
 			JSONObject jsonObject = JSONObject.parseObject(doc.text().replaceAll("null", "\"\""));
@@ -126,7 +142,9 @@ public class PixivSubfunction {
 	public static ThreeTuple<String, List<String>, String> GetImageUrls(String imageId) {
 		String url = "https://www.pixiv.net/ajax/illust/" + imageId; // API接口
 		JSONObject body = JSONObject.parseObject(
-				JSONObject.parseObject(JsoupUtil.connect(url).proxy(proxyHost, proxyPort).cookies(cookies).retry(MAX_RETRY, MILLISECONDS_SLEEP).get().text())
+				JSONObject
+						.parseObject(JsoupUtil.connect(url).proxy(proxyHost, proxyPort).cookies(cookies)
+								.retry(MAX_RETRY, MILLISECONDS_SLEEP).get().text())
 						.getString("body"));
 		JSONArray labels = JSONArray.parseArray(JSONObject.parseObject(body.getString("tags")).getString("tags"));
 		StringBuilder fileName = new StringBuilder("pixiv " + imageId);
@@ -147,7 +165,7 @@ public class PixivSubfunction {
 			String newUrl = fileUrl.substring(0, fileUrl.length() - suffix.length() - 1);
 			imageUrls.add(newUrl + i + suffix);
 		}
-		return TupleUtil.tuple(imageId, imageUrls, fileName.toString());
+		return Tuple.of(imageId, imageUrls, fileName.toString());
 	}
 
 	/**
@@ -164,8 +182,9 @@ public class PixivSubfunction {
 		params.put("restrict", "0");
 		params.put("format", "json");
 		params.put("user_id", userId);
-		return URIUtils.statusIsOK(JsoupUtil.connect(url).header("x-csrf-token", x_csrf_token).proxy(proxyHost, proxyPort).data(params).cookies(cookies)
-				.retry(1, MILLISECONDS_SLEEP).execute(Connection.Method.POST).statusCode());
+		return URIUtils.statusIsOK(JsoupUtil.connect(url).header("x-csrf-token", x_csrf_token)
+				.proxy(proxyHost, proxyPort).data(params).cookies(cookies)
+				.retry(1, MILLISECONDS_SLEEP).method(Method.POST).execute().statusCode());
 	}
 
 	/**
@@ -180,8 +199,9 @@ public class PixivSubfunction {
 		params.put("mode", "del");
 		params.put("type", "bookuser");
 		params.put("id", userId);
-		return URIUtils.statusIsOK(JsoupUtil.connect(url).header("x-csrf-token", x_csrf_token).proxy(proxyHost, proxyPort).data(params).cookies(cookies)
-				.retry(1, MILLISECONDS_SLEEP).execute(Connection.Method.POST).statusCode());
+		return URIUtils.statusIsOK(JsoupUtil.connect(url).header("x-csrf-token", x_csrf_token)
+				.proxy(proxyHost, proxyPort).data(params).cookies(cookies)
+				.retry(1, MILLISECONDS_SLEEP).method(Method.POST).execute().statusCode());
 	}
 
 	/**
@@ -196,10 +216,11 @@ public class PixivSubfunction {
 		ExecutorService executorService = Executors.newFixedThreadPool(MAX_API); // 限制多线程
 		for (int i = 0; i < (int) Math.ceil((double) total / (double) limit); i++) {
 			executorService.execute(new ParameterizedThread<>(i, (index) -> { // 执行多线程程
-				String url =
-						"https://www.pixiv.net/ajax/user/" + userId + "/following?rest=show&tag=&lang=zh&limit=" + limit + "&offset=" + limit * index; // API接口
+				String url = "https://www.pixiv.net/ajax/user/" + userId + "/following?rest=show&tag=&lang=zh&limit="
+						+ limit + "&offset=" + limit * index; // API接口
 				JSONObject jsonObject = JSONObject.parseObject(
-						JsoupUtil.connect(url).proxy(proxyHost, proxyPort).cookies(cookies).retry(MAX_RETRY, MILLISECONDS_SLEEP).get().text());
+						JsoupUtil.connect(url).proxy(proxyHost, proxyPort).cookies(cookies)
+								.retry(MAX_RETRY, MILLISECONDS_SLEEP).get().text());
 				JSONObject body = JSONObject.parseObject(jsonObject.getString("body"));
 				JSONArray users = JSONArray.parseArray(body.getString("users"));
 				for (int j = 0; j < users.size(); j++) {
@@ -219,7 +240,9 @@ public class PixivSubfunction {
 	public static int GetFollowTotal() {
 		String url = "https://www.pixiv.net/ajax/user/extra?lang=zh"; // API接口
 		return JSONObject.parseObject(JSONObject.parseObject(
-						JsoupUtil.connect(url).proxy(proxyHost, proxyPort).cookies(cookies).retry(MAX_RETRY, MILLISECONDS_SLEEP).execute().body()).getString("body"))
+				JsoupUtil.connect(url).proxy(proxyHost, proxyPort).cookies(cookies).retry(MAX_RETRY, MILLISECONDS_SLEEP)
+						.execute().body())
+				.getString("body"))
 				.getInteger("following");
 	}
 
@@ -230,7 +253,8 @@ public class PixivSubfunction {
 	 */
 	public static String GetUserId() {
 		String url = "https://www.pixiv.net/setting_user.php"; // API接口
-		return JsoupUtil.connect(url).proxy(proxyHost, proxyPort).cookies(cookies).retry(MAX_RETRY, MILLISECONDS_SLEEP).execute().header("x-userid");
+		return JsoupUtil.connect(url).proxy(proxyHost, proxyPort).cookies(cookies).retry(MAX_RETRY, MILLISECONDS_SLEEP)
+				.execute().header("x-userid");
 	}
 
 	/**
@@ -243,17 +267,20 @@ public class PixivSubfunction {
 		Set<ThreeTuple<String, List<String>, String>> imagesInfo = new CopyOnWriteArraySet<>();
 		List<String> heatdayUrls = new ArrayList<>();
 		for (int i = 1; i <= 2; i++) {
-			String heatdayUrl = "https://www.pixiv.net/ranking.php?mode=daily_r18&format=json&date=" + currentDate + "&p=" + i; // API:接口 R18
+			String heatdayUrl = "https://www.pixiv.net/ranking.php?mode=daily_r18&format=json&date=" + currentDate
+					+ "&p=" + i; // API:接口 R18
 			heatdayUrls.add(heatdayUrl);
 		}
 		for (int i = 1; i <= 10; i++) {
-			String heatdayUrl = "https://www.pixiv.net/ranking.php?mode=daily&format=json&date=" + currentDate + "&p=" + i; // API接口
+			String heatdayUrl = "https://www.pixiv.net/ranking.php?mode=daily&format=json&date=" + currentDate + "&p="
+					+ i; // API接口
 			heatdayUrls.add(heatdayUrl);
 		}
 		ExecutorService executorService = Executors.newFixedThreadPool(MAX_API); // 限制多线程
 		for (String heatdayUrl : heatdayUrls) { // 执行多线程程
 			executorService.execute(new Thread(() -> { // 程序
-				Document doc = JsoupUtil.connect(heatdayUrl).cookies(cookies).proxy(proxyHost, proxyPort).retry(MAX_RETRY, MILLISECONDS_SLEEP).get();
+				Document doc = JsoupUtil.connect(heatdayUrl).cookies(cookies).proxy(proxyHost, proxyPort)
+						.retry(MAX_RETRY, MILLISECONDS_SLEEP).get();
 				JSONArray contents = JSONObject.parseObject(doc.text()).getJSONArray("contents");// 获取数组
 				imagesInfo.addAll(imageInfosOfJSONArray(contents, "illust_type", "illust_id", "illust_page_count"));
 			}));
@@ -264,7 +291,8 @@ public class PixivSubfunction {
 
 	public static Set<ThreeTuple<String, List<String>, String>> GetOptimalImageInfos() {
 		String url = "https://www.pixiv.net/ajax/top/illust?mode=all&lang=zh"; // API接口
-		Document doc = JsoupUtil.connect(url).proxy(proxyHost, proxyPort).cookies(cookies).retry(MAX_RETRY, MILLISECONDS_SLEEP).get();
+		Document doc = JsoupUtil.connect(url).proxy(proxyHost, proxyPort).cookies(cookies)
+				.retry(MAX_RETRY, MILLISECONDS_SLEEP).get();
 		JSONObject jsonObject = JSONObject.parseObject(doc.text());
 		JSONObject body = JSONObject.parseObject(jsonObject.getString("body"));
 		JSONObject thumbnails = JSONObject.parseObject(body.getString("thumbnails"));
@@ -274,8 +302,10 @@ public class PixivSubfunction {
 
 	public static Set<ThreeTuple<String, List<String>, String>> GetSuggestionImageInfos() {
 		String url = "https://www.pixiv.net/ajax/search/suggestion?mode=all"; // API接口
-		Document doc = JsoupUtil.connect(url).proxy(proxyHost, proxyPort).cookies(cookies).retry(MAX_RETRY, MILLISECONDS_SLEEP).get();
-		JSONArray thumbnails = JSONObject.parseObject(JSONObject.parseObject(doc.text()).getString("body")).getJSONArray("thumbnails");// 获取数组
+		Document doc = JsoupUtil.connect(url).proxy(proxyHost, proxyPort).cookies(cookies)
+				.retry(MAX_RETRY, MILLISECONDS_SLEEP).get();
+		JSONArray thumbnails = JSONObject.parseObject(JSONObject.parseObject(doc.text()).getString("body"))
+				.getJSONArray("thumbnails");// 获取数组
 		return imageInfosOfJSONArray(thumbnails);
 	}
 
@@ -283,11 +313,11 @@ public class PixivSubfunction {
 		return imageInfosOfJSONArray(jsonArray, "illustType", "id", "pageCount");
 	}
 
-	public static Set<ThreeTuple<String, List<String>, String>> imageInfosOfJSONArray(JSONArray jsonArray, String illustTypeName, String imageIdName,
+	public static Set<ThreeTuple<String, List<String>, String>> imageInfosOfJSONArray(JSONArray jsonArray,
+			String illustTypeName, String imageIdName,
 			String pageCountName) {
 		Set<ThreeTuple<String, List<String>, String>> imagesInfo = new HashSet<>();
-		for_jsonArray:
-		for (int i = 0; i < jsonArray.size(); i++) { // 提取出family中的所有
+		for_jsonArray: for (int i = 0; i < jsonArray.size(); i++) { // 提取出family中的所有
 			JSONObject jsonObject = jsonArray.getJSONObject(i);
 			String illustType = jsonObject.getString(illustTypeName);
 			if (!illustType.equals("0")) { // illustType: 0-插画 1-漫画 2-动图
@@ -308,14 +338,15 @@ public class PixivSubfunction {
 					filename.append(" ").append(imagelabel);
 				}
 			}
-			String imageDate = StringUtils.extractRegex(String.valueOf(jsonObject.get("url")), "\\d+/\\d+/\\d+/\\d+/\\d+/\\d+/");
+			String imageDate = StringUtils.extractRegex(String.valueOf(jsonObject.get("url")),
+					"\\d+/\\d+/\\d+/\\d+/\\d+/\\d+/");
 			int pageCount = Integer.parseInt(String.valueOf(jsonObject.get(pageCountName)));
 			String headUrl = "https://i.pximg.net/img-original/img/";
 			for (int count = 0; count < pageCount; count++) { // 获取文件URL,无后缀格式
 				String suffixUrl = imageId + "_p" + count;
 				fileUrls.add(headUrl + imageDate + suffixUrl);
 			}
-			imagesInfo.add(TupleUtil.tuple(imageId, fileUrls, filename.toString()));
+			imagesInfo.add(Tuple.of(imageId, fileUrls, filename.toString()));
 		}
 		return imagesInfo;
 	}
@@ -334,7 +365,8 @@ public class PixivSubfunction {
 				logger.info("Pixiv - 正在下载 ID: " + imageId + " URL: " + imageIdUrl);
 			}
 			int statusCode = NetworkFileUtil.connect(imagefileUrl).proxy(proxyHost, proxyPort).referrer(imageIdUrl)
-					.filename(i > 1 ? fileName + " " + i + suffix : fileName + suffix).retry(MAX_RETRY, MILLISECONDS_SLEEP).multithread(DOWN_THREADS)
+					.filename(i > 1 ? fileName + " " + i + suffix : fileName + suffix)
+					.retry(MAX_RETRY, MILLISECONDS_SLEEP).multithread(DOWN_THREADS)
 					.download(imageFolderPath);
 			if (URIUtils.statusIsOK(statusCode)) {
 				App.imageCount.addAndGet(1);
@@ -361,13 +393,17 @@ public class PixivSubfunction {
 				logger.info("Pixiv - 正在下载 ID: " + imageId + " URL: " + imageIdUrl);
 			}
 			String suffix = ".jpg";
-			int statusCode = NetworkFileUtil.connect(fileUrls.get(i - 1) + suffix).proxy(proxyHost, proxyPort).referrer(imageIdUrl)
-					.filename(i > 1 ? fileName + " " + suffix : fileName + suffix).multithread(DOWN_THREADS).retry(MAX_RETRY, MILLISECONDS_SLEEP)
+			int statusCode = NetworkFileUtil.connect(fileUrls.get(i - 1) + suffix).proxy(proxyHost, proxyPort)
+					.referrer(imageIdUrl)
+					.filename(i > 1 ? fileName + " " + suffix : fileName + suffix).multithread(DOWN_THREADS)
+					.retry(MAX_RETRY, MILLISECONDS_SLEEP)
 					.download(imageFolderPath);
 			if (statusCode == HttpStatus.SC_NOT_FOUND) {
 				suffix = ".png";
-				statusCode = NetworkFileUtil.connect(fileUrls.get(i - 1) + suffix).proxy(proxyHost, proxyPort).referrer(imageIdUrl)
-						.filename(i > 1 ? fileName + " " + suffix : fileName + suffix).multithread(DOWN_THREADS).retry(MAX_RETRY, MILLISECONDS_SLEEP)
+				statusCode = NetworkFileUtil.connect(fileUrls.get(i - 1) + suffix).proxy(proxyHost, proxyPort)
+						.referrer(imageIdUrl)
+						.filename(i > 1 ? fileName + " " + suffix : fileName + suffix).multithread(DOWN_THREADS)
+						.retry(MAX_RETRY, MILLISECONDS_SLEEP)
 						.download(imageFolderPath);
 			}
 			if (statusCode == HttpStatus.SC_OK) {

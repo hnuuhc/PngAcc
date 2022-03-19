@@ -1,27 +1,33 @@
 package org.haic.png.Sankaku;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+
 import org.haic.often.FilesUtils;
 import org.haic.often.Judge;
+import org.haic.often.ReadWriteUtils;
 import org.haic.often.Multithread.MultiThreadUtils;
 import org.haic.often.Multithread.ParameterizedThread;
 import org.haic.often.Network.JsoupUtil;
 import org.haic.often.Network.NetworkFileUtil;
 import org.haic.often.Network.URIUtils;
-import org.haic.often.ReadWriteUtils;
 import org.haic.often.Tuple.ThreeTuple;
-import org.haic.often.Tuple.TupleUtil;
+import org.haic.often.Tuple.Tuple;
 import org.haic.png.App;
 import org.haic.png.ChildRout;
 import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class Sankaku_LabelImages {
 
@@ -88,7 +94,8 @@ public class Sankaku_LabelImages {
 	}
 
 	private static String GetImageUrl(String imageid) {
-		Document labelurl_doc = JsoupUtil.connect(sankaku_url + "cn/post/show/" + imageid).timeout(12000).proxy(proxyHost, proxyPort).cookies(cookies)
+		Document labelurl_doc = JsoupUtil.connect(sankaku_url + "cn/post/show/" + imageid).timeout(12000)
+				.proxy(proxyHost, proxyPort).cookies(cookies)
 				.retry(MAX_RETRY, MILLISECONDS_SLEEP).get();
 		return "https:" + Objects.requireNonNull(labelurl_doc.selectFirst("a[id='image-link']")).attr("href");
 	}
@@ -99,7 +106,8 @@ public class Sankaku_LabelImages {
 
 	private static Set<ThreeTuple<String, String, String>> GetLabelInfo(String whitelabel, String label_api_url) {
 		Set<ThreeTuple<String, String, String>> imagesInfo = new HashSet<>();
-		Document document = JsoupUtil.connect(label_api_url).timeout(12000).proxy(proxyHost, proxyPort).cookies(cookies).retry(MAX_RETRY, MILLISECONDS_SLEEP)
+		Document document = JsoupUtil.connect(label_api_url).timeout(12000).proxy(proxyHost, proxyPort).cookies(cookies)
+				.retry(MAX_RETRY, MILLISECONDS_SLEEP)
 				.get();
 		JSONObject jsonObject = JSONObject.parseObject(document.text());
 		String next = JSONObject.parseObject(jsonObject.getString("meta")).getString("next");
@@ -108,8 +116,7 @@ public class Sankaku_LabelImages {
 			imagesInfo.addAll(GetLabelInfo(whitelabel, next_label_api_url));
 		}
 		JSONArray jsonArray = jsonObject.getJSONArray("data");// 获取数组
-		for_jsonArray:
-		for (int i = 0; i < jsonArray.size(); i++) {
+		for_jsonArray: for (int i = 0; i < jsonArray.size(); i++) {
 			JSONObject data_jsonObject = jsonArray.getJSONObject(i);
 			String imageid = data_jsonObject.getString("id");
 			if (bypass_usedid && usedid_lists.contains(imageid)) {
@@ -140,7 +147,7 @@ public class Sankaku_LabelImages {
 			String suffix = "." + file_type;
 			filename.append(" ").append(suffix);
 			String imagefile_url = data_jsonObject.getString("file_url");
-			imagesInfo.add(TupleUtil.tuple(imageid, imagefile_url, filename.toString()));
+			imagesInfo.add(Tuple.of(imageid, imagefile_url, filename.toString()));
 		}
 		return imagesInfo;
 	}
@@ -150,7 +157,8 @@ public class Sankaku_LabelImages {
 		logger.info("Sankaku - 正在下载 ID: " + imageid + " URL: " + imageidUrl);
 		usedid_lists.add(imageid);
 		imageUrl = Judge.isEmpty(imageUrl) ? GetImageUrl(imageid) : imageUrl;
-		int statusCode = NetworkFileUtil.connect(imageUrl).proxy(proxyHost, proxyPort).filename(filename).multithread(DOWN_THREADS)
+		int statusCode = NetworkFileUtil.connect(imageUrl).proxy(proxyHost, proxyPort).filename(filename)
+				.multithread(DOWN_THREADS)
 				.retry(MAX_RETRY, MILLISECONDS_SLEEP).download(image_folderPath);
 		if (URIUtils.statusIsOK(statusCode)) {
 			App.imageCount.addAndGet(1);

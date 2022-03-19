@@ -1,15 +1,16 @@
 package org.haic.png;
 
-import org.haic.png.Sankaku.SankakuLogin;
-import org.haic.png.Yande.YandeImagesDownload;
-
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import org.haic.png.Sankaku.SankakuLogin;
+import org.haic.png.Yande.YandeImagesDownload;
 
 public class App {
 	// **************************** MiXin *********************************
 	public static final String image_folderPath = "F:\\Pictures"; // 图片保存路径
-	public static final String browser_userDataPath = System.getProperty("user.home") + "\\AppData\\Local\\Microsoft\\Edge\\User Data";
+	public static final String browser_userDataPath = System.getProperty("user.home")
+			+ "\\AppData\\Local\\Microsoft\\Edge\\User Data";
 
 	public static final String proxyHost = "127.0.0.1"; // 代理主机
 	public static final int proxyPort = 7890; // 代理端口
