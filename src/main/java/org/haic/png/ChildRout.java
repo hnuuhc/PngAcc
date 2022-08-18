@@ -1,15 +1,15 @@
 package org.haic.png;
 
-import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.haic.often.FilesUtils;
-import org.haic.often.ReadWriteUtils;
 import org.haic.often.Multithread.MultiThreadUtils;
 import org.haic.often.Network.JsoupUtil;
 import org.haic.often.Network.Method;
+import org.haic.often.ReadWriteUtils;
 import org.jetbrains.annotations.NotNull;
+
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ChildRout {
 
@@ -47,7 +47,7 @@ public class ChildRout {
 		long start = System.currentTimeMillis(); // 获取开始时间
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 			long end = System.currentTimeMillis(); // 获取结束时间
-			System.out.println("程序运行时间：" + (end - start) / 1000 + "s 本次共计下载 " + App.imageCount + " 张图片");
+			System.out.println("[RESULT] 程序运行时间：" + (end - start) / 1000 + "s 本次共计下载 " + App.imageCount + " 张图片");
 		}));
 	}
 
@@ -71,19 +71,17 @@ public class ChildRout {
 	/**
 	 * 获取网站登陆cookies
 	 *
-	 * @param domin    网站域名,格式-https://xxx.xxx.xxx/
+	 * @param domin    网站域名
 	 * @param userName 用户名
 	 * @param password 密码
 	 * @return cookies
 	 */
-	public static Map<String, String> GetLoginCookies(@NotNull String domin, @NotNull String userName,
-			@NotNull String password) {
+	public static Map<String, String> GetLoginCookies(@NotNull String domin, @NotNull String userName, @NotNull String password) {
 		Map<String, String> params = new HashMap<>();
 		params.put("user[name]", userName);
 		params.put("user[password]", password);
 		String loginUrl = domin + "user/authenticate";
-		return JsoupUtil.connect(loginUrl).timeout(10000).data(params).proxy(App.proxyHost, App.proxyPort)
-				.retry(2, App.MILLISECONDS_SLEEP).errorExit(true)
+		return JsoupUtil.connect(loginUrl).timeout(10000).data(params).proxy(App.proxyHost, App.proxyPort).retry(2, App.MILLISECONDS_SLEEP).errorExit(true)
 				.method(Method.POST).execute().cookies();
 	}
 

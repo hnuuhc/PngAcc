@@ -1,13 +1,5 @@
 package org.haic.png.Pixiv;
 
-import org.haic.often.FilesUtils;
-import org.haic.often.Multithread.MultiThreadUtils;
-import org.haic.often.Multithread.ParameterizedThread;
-import org.haic.often.ReadWriteUtils;
-import org.haic.often.Tuple.ThreeTuple;
-import org.haic.png.App;
-import org.haic.png.ChildRout;
-
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -16,6 +8,14 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import org.haic.often.FilesUtils;
+import org.haic.often.ReadWriteUtils;
+import org.haic.often.Multithread.MultiThreadUtils;
+import org.haic.often.Multithread.ParameterizedThread;
+import org.haic.often.Tuple.ThreeTuple;
+import org.haic.png.App;
+import org.haic.png.ChildRout;
 
 public class PixivImagesDownload {
 
@@ -36,6 +36,7 @@ public class PixivImagesDownload {
 	public static void author() {
 		PixivSubfunction.initialization(); // 初始化参数
 		List<String> authorsUids = ReadWriteUtils.orgin(authorsUidFilePath).list();
+		authorsUids.removeIf(l -> l.equals(""));
 		List<String> followUserIds = PixivSubfunction.GetFollowUserIds();
 		List<String> userIds = new ArrayList<>(followUserIds);
 		userIds.removeAll(authorsUids);
@@ -48,11 +49,9 @@ public class PixivImagesDownload {
 			ExecutorService bookmarkAddExecutorService = Executors.newFixedThreadPool(MAX_API);
 			for (String authorsUid : authorsUids) { // 关注用户
 				bookmarkAddExecutorService.execute(new Thread(() -> { // 执行多线程程
-					if (PixivSubfunction.bookmarkAdd(authorsUid)) {
-						System.out.println("关注用户:" + authorsUid + " - true");
-					} else {
-						System.out.println("关注用户:" + authorsUid + " - false");
-					}
+					String info = "关注用户:" + authorsUid + " - ";
+					info += PixivSubfunction.bookmarkAdd(authorsUid) ? "true" : "false";
+					System.out.println(info);
 				}));
 			}
 			MultiThreadUtils.WaitForEnd(bookmarkAddExecutorService); // 等待线程结束
@@ -61,9 +60,9 @@ public class PixivImagesDownload {
 		int len = authorsUids.size();
 		for (int i = 0; i < len; i++) {
 			String authorsUid = authorsUids.get(i);
-			System.out.print("正在下载 Pixiv 作者图片,当前作者UID: " + authorsUid + " 进度：" + (i + 1) + "/" + len);
+			System.out.print("[Schedule] 正在下载 Pixiv 作者图片,当前作者UID: " + authorsUid + " 进度：" + (i + 1) + "/" + len);
 			Set<ThreeTuple<String, List<String>, String>> imagesInfo = PixivSubfunction.GetAuthorInfos(authorsUid);
-			System.out.println(" 图片数量：" + imagesInfo.size() + " 存储路径: " + imageFolderPath);
+			System.out.println(" 图片数量：" + imagesInfo.stream().mapToInt(l -> l.second.size()).sum());
 			MultiThreadDownload(imagesInfo);
 		}
 	}
@@ -81,7 +80,7 @@ public class PixivImagesDownload {
 		int len = whitelabel_lists.size();
 		for (int i = 0; i < len; i++) {
 			String whitelabel = whitelabel_lists.get(i);
-			System.out.print("正在下载 Pixiv 标签白名单图片,当前标签: " + whitelabel + " 进度：" + (i + 1) + "/" + len);
+			System.out.print("[Schedule] 正在下载 Pixiv 标签白名单图片,当前标签: " + whitelabel + " 进度：" + (i + 1) + "/" + len);
 			Set<ThreeTuple<String, List<String>, String>> imagesInfo = PixivSubfunction.GetLabelImagesInfo(whitelabel);
 			System.out.println(" 图片数量：" + imagesInfo.size() + " 存储路径: " + imageFolderPath);
 			MultiThreadNoSuffixDownload(imagesInfo);
@@ -90,7 +89,7 @@ public class PixivImagesDownload {
 
 	public static void optimal() {
 		PixivSubfunction.initialization(); // 初始化参数
-		System.out.println("正在下载 Pixiv 最佳图片 存储路径: " + imageFolderPath);
+		System.out.println("[Schedule] 正在下载 Pixiv 最佳图片 存储路径: " + imageFolderPath);
 		MultiThreadNoSuffixDownload(PixivSubfunction.GetOptimalImageInfos());
 	}
 
@@ -113,7 +112,7 @@ public class PixivImagesDownload {
 					continue;
 				}
 			}
-			System.out.println("正在下载 Pixiv 每日热门图片,当前日期 : " + current_date_str + " 存储路径: " + imageFolderPath);
+			System.out.println("[Schedule] 正在下载 Pixiv 每日热门图片,当前日期 : " + current_date_str + " 存储路径: " + imageFolderPath);
 			MultiThreadNoSuffixDownload(PixivSubfunction.GetHeatdayImageInfos(current_date_str.replaceAll("-", "")));
 			if (record_date && !record_date_lists.contains(current_date_str)) {
 				ChildRout.WriteFileInfo(current_date_str, record_date_filePath);
@@ -125,7 +124,7 @@ public class PixivImagesDownload {
 
 	public static void suggestion() {
 		PixivSubfunction.initialization(); // 初始化参数
-		System.out.println("正在下载 Pixiv 推荐图片 存储路径: " + imageFolderPath);
+		System.out.println("[Schedule] 正在下载 Pixiv 推荐图片 存储路径: " + imageFolderPath);
 		MultiThreadNoSuffixDownload(PixivSubfunction.GetSuggestionImageInfos());
 	}
 
