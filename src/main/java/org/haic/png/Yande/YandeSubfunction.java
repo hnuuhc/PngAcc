@@ -1,10 +1,13 @@
 package org.haic.png.Yande;
 
 import com.alibaba.fastjson.JSONObject;
-import org.haic.often.*;
+import org.haic.often.FilesUtils;
+import org.haic.often.Judge;
 import org.haic.often.Multithread.MultiThreadUtils;
 import org.haic.often.Multithread.ParameterizedThread;
 import org.haic.often.Network.*;
+import org.haic.often.ReadWriteUtils;
+import org.haic.often.RemDuplication;
 import org.haic.png.App;
 import org.haic.png.ChildRout;
 import org.jsoup.nodes.Document;
@@ -187,8 +190,7 @@ public class YandeSubfunction {
 		usedIds.add(imageid);
 		String imageUrl = imageInfo.getString("file_url");
 		String md5 = imageInfo.getString("md5");
-		String name = StringUtils.decodeByURL(imageUrl.substring(imageUrl.lastIndexOf("/") + 1));
-		NetworkUtil.Connection config = NetworkUtil.connect(imageUrl).proxy(proxyHost, proxyPort).hash(md5).fileName(name).retry(MAX_RETRY, MILLISECONDS_SLEEP)
+		NetworkUtil.Connection config = NetworkUtil.connect(imageUrl).proxy(proxyHost, proxyPort).hash(md5).retry(MAX_RETRY, MILLISECONDS_SLEEP)
 				.multithread(DOWN_THREADS);
 		NetworkUtil.Response res;
 		int statusCode;
