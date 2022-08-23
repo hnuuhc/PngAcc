@@ -198,7 +198,7 @@ public class YandeSubfunction {
 			res = config.download(image_folderPath);
 			statusCode = res.statusCode();
 		} while (statusCode == HttpStatus.SC_TOO_MANY_REQUEST);
-		if (statusCode == 403) {// 尝试修复服务端文件错误
+		if (statusCode == HttpStatus.SC_INTERNAL_SERVER_ERROR) {// 尝试修复服务端文件错误
 			imageUrl = "https://files.yande.re/image/" + md5 + "/yande.re." + imageInfo.getString("file_ext");
 			res.clear();
 			statusCode = config.url(imageUrl).download(image_folderPath).statusCode();
