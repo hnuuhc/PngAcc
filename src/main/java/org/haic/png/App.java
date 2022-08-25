@@ -90,6 +90,7 @@ public class App {
 	public static final boolean yande_record_usedid = true; // 记录已下载的图片ID
 	public static final boolean yande_bypass_usedid = true; // 跳过已记录的图片ID
 	public static final boolean yande_bypass_blacklabels = true; // 跳过黑名单标签
+	public static final boolean yande_bypass_low_quality = true; // 跳过早期低质量图片
 	public static final boolean yande_global_label = true; // 全局方式更新前n条数据的白名单标签图片,在标签过多时可有效提升效率
 
 	public static final String yande_whitelabels_filePath = "data/YandeData/Yande_WhiteLabels.txt"; // 白名单文件

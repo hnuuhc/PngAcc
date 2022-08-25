@@ -2,10 +2,12 @@ package org.haic.png.Yande;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import org.haic.often.FilesUtils;
 import org.haic.often.ReadWriteUtils;
@@ -42,6 +44,9 @@ public class YandeImagesDownload {
 		if (global_label) {
 			System.out.print("[Schedule] 正在下载 Yande 标签白名单图片");
 			List<JSONObject> imagesInfo = YandeSubfunction.GetLabelImagesInfoAsGlobal(whitelabel_lists);
+			imagesInfo = imagesInfo.stream()
+					.sorted(Comparator.comparing(l -> l.getInteger("id"), Comparator.reverseOrder()))
+					.collect(Collectors.toList());
 			System.out.println(" 图片数量：" + imagesInfo.size() + " 存储路径: " + image_folderPath);
 			ExecutorService executorService = Executors.newFixedThreadPool(MAX_THREADS); // 限制多线程
 			for (JSONObject imageInfo : imagesInfo) { // 下载
@@ -56,6 +61,9 @@ public class YandeImagesDownload {
 				String whitelabel = whitelabel_lists.get(i);
 				System.out.print("[Schedule] 正在下载 Yande 标签白名单图片,当前标签: " + whitelabel + " 进度：" + (i + 1) + "/" + len);
 				List<JSONObject> imagesInfo = YandeSubfunction.GetLabelImagesInfo(whitelabel);
+				imagesInfo = imagesInfo.stream()
+						.sorted(Comparator.comparing(l -> l.getInteger("id"), Comparator.reverseOrder()))
+						.collect(Collectors.toList());
 				System.out.println(" 图片数量：" + imagesInfo.size() + " 存储路径: " + image_folderPath);
 				ExecutorService executorService = Executors.newFixedThreadPool(MAX_THREADS); // 限制多线程
 				for (JSONObject imageInfo : imagesInfo) { // 下载

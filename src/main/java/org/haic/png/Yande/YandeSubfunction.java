@@ -34,6 +34,7 @@ import com.alibaba.fastjson.JSONObject;
 public class YandeSubfunction {
 
 	private static final boolean record_usedid = App.yande_record_usedid; // 记录已下载的图片ID
+	private static final boolean bypass_low_quality = App.yande_bypass_low_quality;
 	private static final boolean bypass_usedid = App.yande_bypass_usedid; // 跳过已记录的图片ID
 	private static final boolean bypass_blacklabels = App.yande_bypass_blacklabels; // 标签黑名单
 	private static final boolean MAX_RETRY = App.MAX_RETRY; // 最大重试次数
@@ -49,6 +50,7 @@ public class YandeSubfunction {
 	private static final int API_MAX_THREADS = App.yande_api_maxthreads; // 访问API最大线程
 	private static final int limit = App.yande_api_limit; // API单页获取数量限制
 	private static final int global_label_amount = App.yande_global_label_amount;
+	private static final int MAX_LOW_QUALITY = 250000;
 
 	private static boolean isInitialization; // 判断参数是否已初始化
 
@@ -87,6 +89,9 @@ public class YandeSubfunction {
 						.retry(MAX_RETRY, MILLISECONDS_SLEEP).execute();
 				for (JSONObject post : JSONObject.parseArray(labelInfo.body(), JSONObject.class)) {
 					String imageid = post.getString("id");
+					if (bypass_low_quality && Integer.parseInt(imageid) < MAX_LOW_QUALITY) {
+						continue;
+					}
 					if (bypass_usedid && usedIds.contains(imageid)) {
 						continue;
 					}
@@ -117,6 +122,9 @@ public class YandeSubfunction {
 				}
 				for (JSONObject post : JSONObject.parseArray(res.body(), JSONObject.class)) {
 					String imageid = post.getString("id");
+					if (bypass_low_quality && Integer.parseInt(imageid) < MAX_LOW_QUALITY) {
+						continue;
+					}
 					if (bypass_usedid && usedIds.contains(imageid)) {
 						continue;
 					}
@@ -150,6 +158,9 @@ public class YandeSubfunction {
 		}
 		for (JSONObject post : JSONObject.parseArray(res.body(), JSONObject.class)) {
 			String imageid = post.getString("id");
+			if (bypass_low_quality && Integer.parseInt(imageid) < MAX_LOW_QUALITY) {
+				continue;
+			}
 			if (imageid.equals(parentImageId) && !childrenImageidLists.contains(parentImageId)) {
 				String new_parent_imageid = post.getString("parent_id");
 				if (!Judge.isEmpty(new_parent_imageid)) {
@@ -184,11 +195,14 @@ public class YandeSubfunction {
 		ExecutorService executorService = Executors.newFixedThreadPool(API_MAX_THREADS); // 限制多线程
 		for (JSONObject post : JSONObject.parseArray(res.body(), JSONObject.class)) {
 			executorService.execute(new Thread(() -> { // 程序
+				String imageid = post.getString("id");
+				if (bypass_low_quality && Integer.parseInt(imageid) < MAX_LOW_QUALITY) {
+					return;
+				}
 				if (bypass_blacklabels
 						&& Arrays.stream(post.getString("tags").split(" ")).anyMatch(l -> blacklabels.contains(l))) {
 					return;
 				}
-				String imageid = post.getString("id");
 				String parentImageid = post.getString("parent_id");
 				if (!Judge.isEmpty(parentImageid)) {
 					imagesInfo.addAll(YandeSubfunction.GetParentImagesInfo(parentImageid));
