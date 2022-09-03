@@ -26,7 +26,7 @@ public class SankakuLogin {
 			if (browser_cookies) {
 				cookies = LocalCookies.home(browser_userDataPath).getCookiesForDomain("sankakucomplex.com");
 			} else {
-				cookies = StringUtils.toMap(ReadWriteUtils.orgin(cookies_filePath).text());
+				cookies = StringUtils.toMap(ReadWriteUtils.orgin(cookies_filePath).read());
 				if (cookies.isEmpty()) {
 					cookies = ChildRout.GetLoginCookies(domain, user_name, user_password);
 					ChildRout.WriteFileInfo(cookies.toString(), cookies_filePath);

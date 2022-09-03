@@ -35,12 +35,12 @@ public class PixivImagesDownload {
 
 	public static void author() {
 		PixivSubfunction.initialization(); // 初始化参数
-		List<String> authorsUids = ReadWriteUtils.orgin(authorsUidFilePath).list();
+		List<String> authorsUids = ReadWriteUtils.orgin(authorsUidFilePath).readAsLine();
 		authorsUids.removeIf(l -> l.equals(""));
 		List<String> followUserIds = PixivSubfunction.GetFollowUserIds();
 		List<String> userIds = new ArrayList<>(followUserIds);
 		userIds.removeAll(authorsUids);
-		if (!ReadWriteUtils.orgin(authorsUidFilePath).list(userIds)) { // 同步账户关注的用户
+		if (!ReadWriteUtils.orgin(authorsUidFilePath).writeAsLine(userIds)) { // 同步账户关注的用户
 			throw new RuntimeException("文件写入失败");
 		}
 		userIds.addAll(authorsUids);
@@ -69,7 +69,7 @@ public class PixivImagesDownload {
 
 	public static void label() {
 		PixivSubfunction.initialization(); // 初始化参数
-		List<String> whitelabel_lists = ReadWriteUtils.orgin(whitelabels_filePath).list();
+		List<String> whitelabel_lists = ReadWriteUtils.orgin(whitelabels_filePath).readAsLine();
 		whitelabel_lists.replaceAll(LabelWhite -> LabelWhite.replaceAll(" ", "_"));
 		for (String whitelabel : whitelabel_lists) {
 			if (PixivSubfunction.blacklabels.contains(whitelabel)) {
@@ -103,7 +103,7 @@ public class PixivImagesDownload {
 		if (unbypass_within_aweek) {
 			within_aweek_date = system_date.minusDays(7);
 		}
-		List<String> record_date_lists = ReadWriteUtils.orgin(record_date_filePath).list();
+		List<String> record_date_lists = ReadWriteUtils.orgin(record_date_filePath).readAsLine();
 		while (current_date.isBefore(system_date)) {
 			String current_date_str = current_date.format(format);
 			if (bypass_record_date && record_date_lists.contains(current_date_str)) {

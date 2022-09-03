@@ -33,7 +33,7 @@ public class YandeImagesDownload {
 
 	public static void label() {
 		YandeSubfunction.initialization(); // 初始化参数
-		List<String> whitelabel_lists = ReadWriteUtils.orgin(whitelabels_filePath).list();
+		List<String> whitelabel_lists = ReadWriteUtils.orgin(whitelabels_filePath).readAsLine();
 		whitelabel_lists.replaceAll(LabelWhite -> LabelWhite.replaceAll(" ", "_"));
 		for (String whitelabel : whitelabel_lists) {
 			if (YandeSubfunction.blacklabels.contains(whitelabel)) {
@@ -83,7 +83,7 @@ public class YandeImagesDownload {
 		LocalDate systemDate = LocalDate.now();
 		LocalDate currentDate = LocalDate.parse(start_date);
 		LocalDate withinAweekDate = systemDate.minusDays(7);
-		List<String> recordDateLists = ReadWriteUtils.orgin(record_date_filePath).list();
+		List<String> recordDateLists = ReadWriteUtils.orgin(record_date_filePath).readAsLine();
 		while (!currentDate.isAfter(systemDate)) {
 			String current_date_str = currentDate.format(date_format);
 			if (bypass_record_date && recordDateLists.contains(current_date_str)) {

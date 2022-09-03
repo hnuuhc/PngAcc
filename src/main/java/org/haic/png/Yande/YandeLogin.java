@@ -1,14 +1,14 @@
 package org.haic.png.Yande;
 
-import java.util.HashMap;
-import java.util.Map;
-
+import org.haic.often.ChromeBrowser.LocalCookies;
 import org.haic.often.Judge;
 import org.haic.often.ReadWriteUtils;
 import org.haic.often.StringUtils;
-import org.haic.often.ChromeBrowser.LocalCookies;
 import org.haic.png.App;
 import org.haic.png.ChildRout;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class YandeLogin {
 
@@ -28,7 +28,7 @@ public class YandeLogin {
 			if (browser_cookies) {
 				cookies = LocalCookies.home(browser_userDataPath).getCookiesForDomain("yande.re");
 			} else {
-				cookies = StringUtils.toMap(ReadWriteUtils.orgin(cookies_filePath).text());
+				cookies = StringUtils.toMap(ReadWriteUtils.orgin(cookies_filePath).read());
 				if (cookies.isEmpty() && !(Judge.isEmpty(user_name) || Judge.isEmpty(user_password))) {
 					cookies = ChildRout.GetLoginCookies(domain, user_name, user_password);
 					ChildRout.WriteFileInfo(cookies.toString(), cookies_filePath);

@@ -64,9 +64,9 @@ public class YandeSubfunction {
 	public static void initialization() {
 		if (!isInitialization) {
 			cookies = YandeLogin.GetCookies();
-			blacklabels = ReadWriteUtils.orgin(blacklabelFilePath).list();
+			blacklabels = ReadWriteUtils.orgin(blacklabelFilePath).readAsLine();
 			blacklabels.replaceAll(label -> label.replaceAll(" ", "_"));
-			usedIds = ReadWriteUtils.orgin(alreadyUsedIdFilePath).list().parallelStream()
+			usedIds = ReadWriteUtils.orgin(alreadyUsedIdFilePath).readAsLine().parallelStream()
 					.map(info -> info.split(" ")[0]).collect(Collectors.toList());
 			isInitialization = true;
 		}

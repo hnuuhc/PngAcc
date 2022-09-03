@@ -59,9 +59,9 @@ public class SankakuSubfunction {
     public static void initialization() {
         if (!isInitialization) {
             cookies = SankakuLogin.GetCookies();
-            blacklabels = ReadWriteUtils.orgin(blacklabels_filePath).list();
+            blacklabels = ReadWriteUtils.orgin(blacklabels_filePath).readAsLine();
             blacklabels.replaceAll(label -> label.replaceAll(" ", "_"));
-            usedIds = ReadWriteUtils.orgin(already_usedid_filePath).list().parallelStream()
+            usedIds = ReadWriteUtils.orgin(already_usedid_filePath).readAsLine().parallelStream()
                     .map(info -> info.split(" ")[0]).collect(Collectors.toList());
             isInitialization = true;
         }

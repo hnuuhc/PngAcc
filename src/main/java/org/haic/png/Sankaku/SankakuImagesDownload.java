@@ -21,7 +21,7 @@ public class SankakuImagesDownload {
 
     public static void label() {
         SankakuSubfunction.initialization(); // 初始化参数
-        List<String> whitelabel_lists = ReadWriteUtils.orgin(whitelabels_filePath).list();
+        List<String> whitelabel_lists = ReadWriteUtils.orgin(whitelabels_filePath).readAsLine();
         whitelabel_lists.replaceAll(LabelWhite -> LabelWhite.replaceAll(" ", "_"));
         for (String whitelabel : whitelabel_lists) {
             if (SankakuSubfunction.blacklabels.contains(whitelabel)) {
