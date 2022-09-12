@@ -17,7 +17,7 @@ import org.haic.often.FilesUtils;
 import org.haic.often.Judge;
 import org.haic.often.ReadWriteUtils;
 import org.haic.often.StringUtils;
-import org.haic.often.Multithread.MultiThreadUtils;
+import org.haic.often.Multithread.MultiThreadUtil;
 import org.haic.often.Multithread.ParameterizedThread;
 import org.haic.often.Network.JsoupUtil;
 import org.haic.often.Network.Method;
@@ -105,7 +105,7 @@ public class PixivSubfunction {
 				imagesInfo.addAll(imageInfosOfJSONArray(data));
 			}));
 		}
-		MultiThreadUtils.WaitForEnd(executorService); // 等待线程结束
+		MultiThreadUtil.waitForEnd(executorService); // 等待线程结束
 		return imagesInfo;
 	}
 
@@ -135,7 +135,7 @@ public class PixivSubfunction {
 				}
 			}));
 		}
-		MultiThreadUtils.WaitForEnd(executorService); // 等待线程结束
+		MultiThreadUtil.waitForEnd(executorService); // 等待线程结束
 		return imagesInfo;
 	}
 
@@ -229,7 +229,7 @@ public class PixivSubfunction {
 				}
 			}));
 		}
-		MultiThreadUtils.WaitForEnd(executorService); // 等待线程结束
+		MultiThreadUtil.waitForEnd(executorService); // 等待线程结束
 		return userIds;
 	}
 
@@ -286,7 +286,7 @@ public class PixivSubfunction {
 				imagesInfo.addAll(imageInfosOfJSONArray(contents, "illust_type", "illust_id", "illust_page_count"));
 			}));
 		}
-		MultiThreadUtils.WaitForEnd(executorService);
+		MultiThreadUtil.waitForEnd(executorService);
 		return new HashSet<>(imagesInfo);
 	}
 

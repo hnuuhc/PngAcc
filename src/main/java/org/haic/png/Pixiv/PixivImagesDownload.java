@@ -11,7 +11,7 @@ import java.util.concurrent.Executors;
 
 import org.haic.often.FilesUtils;
 import org.haic.often.ReadWriteUtils;
-import org.haic.often.Multithread.MultiThreadUtils;
+import org.haic.often.Multithread.MultiThreadUtil;
 import org.haic.often.Multithread.ParameterizedThread;
 import org.haic.often.Tuple.ThreeTuple;
 import org.haic.png.App;
@@ -54,7 +54,7 @@ public class PixivImagesDownload {
 					System.out.println(info);
 				}));
 			}
-			MultiThreadUtils.WaitForEnd(bookmarkAddExecutorService); // 等待线程结束
+			MultiThreadUtil.waitForEnd(bookmarkAddExecutorService); // 等待线程结束
 		}
 		authorsUids = userIds;
 		int len = authorsUids.size();
@@ -135,7 +135,7 @@ public class PixivImagesDownload {
 				PixivSubfunction.download(info.first, info.second, info.third);
 			}));
 		}
-		MultiThreadUtils.WaitForEnd(executorService); // 等待线程结束
+		MultiThreadUtil.waitForEnd(executorService); // 等待线程结束
 	}
 
 	private static void MultiThreadNoSuffixDownload(Set<ThreeTuple<String, List<String>, String>> imagesInfo) {
@@ -145,7 +145,7 @@ public class PixivImagesDownload {
 				PixivSubfunction.noSuffixDownload(info.first, info.second, info.third);
 			}));
 		}
-		MultiThreadUtils.WaitForEnd(executorService); // 等待线程结束
+		MultiThreadUtil.waitForEnd(executorService); // 等待线程结束
 	}
 
 }

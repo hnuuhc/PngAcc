@@ -7,7 +7,7 @@ import java.util.concurrent.Executors;
 
 import org.haic.often.FilesUtils;
 import org.haic.often.ReadWriteUtils;
-import org.haic.often.Multithread.MultiThreadUtils;
+import org.haic.often.Multithread.MultiThreadUtil;
 import org.haic.often.Multithread.ParameterizedThread;
 import org.haic.often.Tuple.ThreeTuple;
 import org.haic.png.App;
@@ -38,7 +38,7 @@ public class SankakuImagesDownload {
                     SankakuSubfunction.download(info.first, info.second, info.third);
                 }));
             }
-            MultiThreadUtils.WaitForEnd(executorService); // 等待线程结束
+            MultiThreadUtil.waitForEnd(executorService); // 等待线程结束
         }
         System.out.println("下载 Sankaku 标签图片 已完成 存储路径: " + image_folderPath);
     }

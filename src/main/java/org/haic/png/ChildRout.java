@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.haic.often.FilesUtils;
 import org.haic.often.ReadWriteUtils;
-import org.haic.often.Multithread.MultiThreadUtils;
+import org.haic.often.Multithread.MultiThreadUtil;
 import org.haic.often.Network.JsoupUtil;
 import org.haic.often.Network.Method;
 import org.jetbrains.annotations.NotNull;
@@ -98,7 +98,7 @@ public class ChildRout {
 					System.out.println("存储空间不足,停止程序!");
 					System.exit(1);
 				}
-				MultiThreadUtils.WaitForThread(10000);
+				MultiThreadUtil.waitForThread(10000);
 			}
 		}).start();
 

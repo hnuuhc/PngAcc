@@ -15,7 +15,7 @@ import org.haic.often.FilesUtils;
 import org.haic.often.Judge;
 import org.haic.often.ReadWriteUtils;
 import org.haic.often.RemDuplication;
-import org.haic.often.Multithread.MultiThreadUtils;
+import org.haic.often.Multithread.MultiThreadUtil;
 import org.haic.often.Multithread.ParameterizedThread;
 import org.haic.often.Network.HttpStatus;
 import org.haic.often.Network.HttpsUtil;
@@ -79,8 +79,8 @@ public class YandeSubfunction {
 				.retry(MAX_RETRY, MILLISECONDS_SLEEP).get();
 		int postCount = Integer.parseInt(Objects.requireNonNull(doc.selectFirst("posts")).attr("count"));
 		ExecutorService executorService = Executors.newFixedThreadPool(API_MAX_THREADS); // 限制多线程
-		for (int i = 1; i <= (int) Math.ceil((double) postCount / (double) limit); i++, MultiThreadUtils
-				.WaitForThread(36)) {
+		for (int i = 1; i <= (int) Math.ceil((double) postCount / (double) limit); i++, MultiThreadUtil
+				.waitForThread(36)) {
 			executorService.execute(new ParameterizedThread<>(i, (index) -> { // 执行多线程程
 				String whitelabelUrl = "https://yande.re/post.json?tags=" + whitelabel + "&page=" + index + "&limit="
 						+ limit;
@@ -103,15 +103,15 @@ public class YandeSubfunction {
 				}
 			}));
 		}
-		MultiThreadUtils.WaitForEnd(executorService); // 等待线程结束
+		MultiThreadUtil.waitForEnd(executorService); // 等待线程结束
 		return new ArrayList<>(imagesInfo);
 	}
 
 	public static List<JSONObject> GetLabelImagesInfoAsGlobal(List<String> whitelabels) {
 		List<JSONObject> imagesInfo = new CopyOnWriteArrayList<>();
 		ExecutorService executorService = Executors.newFixedThreadPool(API_MAX_THREADS); // 限制多线程
-		for (int i = 1; i <= (int) Math.ceil((double) global_label_amount / (double) limit); i++, MultiThreadUtils
-				.WaitForThread(36)) { // 20w是最大值
+		for (int i = 1; i <= (int) Math.ceil((double) global_label_amount / (double) limit); i++, MultiThreadUtil
+				.waitForThread(36)) { // 20w是最大值
 			executorService.execute(new ParameterizedThread<>(i, (index) -> { // 执行多线程程
 				String whitelabelUrl = "https://yande.re/post.json?page=" + index + "&limit=" + limit;
 				Response res = JsoupUtil.connect(whitelabelUrl).proxy(proxyHost, proxyPort).cookies(cookies)
@@ -139,7 +139,7 @@ public class YandeSubfunction {
 				}
 			}));
 		}
-		MultiThreadUtils.WaitForEnd(executorService); // 等待线程结束
+		MultiThreadUtil.waitForEnd(executorService); // 等待线程结束
 		return new ArrayList<>(imagesInfo);
 	}
 
@@ -217,7 +217,7 @@ public class YandeSubfunction {
 				}
 			}));
 		}
-		MultiThreadUtils.WaitForEnd(executorService); // 等待线程结束
+		MultiThreadUtil.waitForEnd(executorService); // 等待线程结束
 		return RemDuplication.HashSet(imagesInfo); // 多线程操作可能会存在重复项,需要去重处理
 	}
 

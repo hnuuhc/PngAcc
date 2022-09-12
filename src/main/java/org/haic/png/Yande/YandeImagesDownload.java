@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 import org.haic.often.FilesUtils;
 import org.haic.often.ReadWriteUtils;
-import org.haic.often.Multithread.MultiThreadUtils;
+import org.haic.often.Multithread.MultiThreadUtil;
 import org.haic.png.App;
 import org.haic.png.ChildRout;
 
@@ -54,7 +54,7 @@ public class YandeImagesDownload {
 					YandeSubfunction.download(imageInfo);
 				}));
 			}
-			MultiThreadUtils.WaitForEnd(executorService); // 等待线程结束
+			MultiThreadUtil.waitForEnd(executorService); // 等待线程结束
 		} else {
 			int len = whitelabel_lists.size();
 			for (int i = 0; i < len; i++) {
@@ -71,7 +71,7 @@ public class YandeImagesDownload {
 						YandeSubfunction.download(imageInfo);
 					}));
 				}
-				MultiThreadUtils.WaitForEnd(executorService); // 等待线程结束
+				MultiThreadUtil.waitForEnd(executorService); // 等待线程结束
 			}
 		}
 	}
@@ -105,7 +105,7 @@ public class YandeImagesDownload {
 				}));
 				// MultiThreadUtils.WaitForThread(36);
 			}
-			MultiThreadUtils.WaitForEnd(executorService); // 等待线程结束
+			MultiThreadUtil.waitForEnd(executorService); // 等待线程结束
 			if (record_date && !recordDateLists.contains(current_date_str)) {
 				ChildRout.WriteFileInfo(current_date_str, record_date_filePath);
 				recordDateLists.add(current_date_str);
