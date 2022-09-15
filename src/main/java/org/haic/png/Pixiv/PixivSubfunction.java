@@ -141,11 +141,15 @@ public class PixivSubfunction {
 
 	public static ThreeTuple<String, List<String>, String> GetImageUrls(String imageId) {
 		String url = "https://www.pixiv.net/ajax/illust/" + imageId; // API接口
-		JSONObject body = JSONObject.parseObject(
-				JSONObject
-						.parseObject(JsoupUtil.connect(url).proxy(proxyHost, proxyPort).cookies(cookies)
-								.retry(MAX_RETRY, MILLISECONDS_SLEEP).get().text())
-						.getString("body"));
+		JSONObject body = null;
+		while (Judge.isNull(body)) {
+			JSONObject info = JSONObject
+					.parseObject(JsoupUtil.connect(url).proxy(proxyHost, proxyPort).cookies(cookies)
+							.retry(MAX_RETRY, MILLISECONDS_SLEEP).get().text());
+			if (!info.getBoolean("error")) {
+				body = JSONObject.parseObject(info.getString("body"));
+			}
+		}
 		JSONArray labels = JSONArray.parseArray(JSONObject.parseObject(body.getString("tags")).getString("tags"));
 		StringBuilder fileName = new StringBuilder("pixiv " + imageId);
 		for (int i = 0; i < labels.size(); i++) {
