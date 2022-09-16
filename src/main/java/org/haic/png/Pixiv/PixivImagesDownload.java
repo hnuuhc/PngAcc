@@ -1,5 +1,13 @@
 package org.haic.png.Pixiv;
 
+import org.haic.often.FilesUtils;
+import org.haic.often.Multithread.ConsumerThread;
+import org.haic.often.Multithread.MultiThreadUtil;
+import org.haic.often.ReadWriteUtils;
+import org.haic.often.Tuple.ThreeTuple;
+import org.haic.png.App;
+import org.haic.png.ChildRout;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -8,14 +16,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import org.haic.often.FilesUtils;
-import org.haic.often.ReadWriteUtils;
-import org.haic.often.Multithread.MultiThreadUtil;
-import org.haic.often.Multithread.ParameterizedThread;
-import org.haic.often.Tuple.ThreeTuple;
-import org.haic.png.App;
-import org.haic.png.ChildRout;
 
 public class PixivImagesDownload {
 
@@ -131,7 +131,7 @@ public class PixivImagesDownload {
 	private static void MultiThreadDownload(Set<ThreeTuple<String, List<String>, String>> imagesInfo) {
 		ExecutorService executorService = Executors.newFixedThreadPool(MAX_THREADS);
 		for (ThreeTuple<String, List<String>, String> imageInfo : imagesInfo) {
-			executorService.execute(new ParameterizedThread<>(imageInfo, (info) -> { // 执行多线程程
+			executorService.execute(new ConsumerThread<>(imageInfo, (info) -> { // 执行多线程程
 				PixivSubfunction.download(info.first, info.second, info.third);
 			}));
 		}
@@ -141,7 +141,7 @@ public class PixivImagesDownload {
 	private static void MultiThreadNoSuffixDownload(Set<ThreeTuple<String, List<String>, String>> imagesInfo) {
 		ExecutorService executorService = Executors.newFixedThreadPool(MAX_THREADS);
 		for (ThreeTuple<String, List<String>, String> imageInfo : imagesInfo) {
-			executorService.execute(new ParameterizedThread<>(imageInfo, (info) -> { // 执行多线程程
+			executorService.execute(new ConsumerThread<>(imageInfo, (info) -> { // 执行多线程程
 				PixivSubfunction.noSuffixDownload(info.first, info.second, info.third);
 			}));
 		}

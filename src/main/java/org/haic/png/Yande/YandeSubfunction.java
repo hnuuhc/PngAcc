@@ -1,35 +1,24 @@
 package org.haic.png.Yande;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
-
+import com.alibaba.fastjson.JSONObject;
 import org.haic.often.FilesUtils;
 import org.haic.often.Judge;
+import org.haic.often.Multithread.ConsumerThread;
+import org.haic.often.Multithread.MultiThreadUtil;
+import org.haic.often.Network.*;
 import org.haic.often.ReadWriteUtils;
 import org.haic.often.RemDuplication;
-import org.haic.often.Multithread.MultiThreadUtil;
-import org.haic.often.Multithread.ParameterizedThread;
-import org.haic.often.Network.HttpStatus;
-import org.haic.often.Network.HttpsUtil;
-import org.haic.often.Network.JsoupUtil;
-import org.haic.often.Network.NetworkUtil;
-import org.haic.often.Network.Response;
-import org.haic.often.Network.URIUtils;
 import org.haic.png.App;
 import org.haic.png.ChildRout;
 import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alibaba.fastjson.JSONObject;
+import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 public class YandeSubfunction {
 
@@ -66,8 +55,7 @@ public class YandeSubfunction {
 			cookies = YandeLogin.GetCookies();
 			blacklabels = ReadWriteUtils.orgin(blacklabelFilePath).readAsLine();
 			blacklabels.replaceAll(label -> label.replaceAll(" ", "_"));
-			usedIds = ReadWriteUtils.orgin(alreadyUsedIdFilePath).readAsLine().parallelStream()
-					.map(info -> info.split(" ")[0]).collect(Collectors.toList());
+			usedIds = ReadWriteUtils.orgin(alreadyUsedIdFilePath).readAsLine().parallelStream().map(info -> info.split(" ")[0]).collect(Collectors.toList());
 			isInitialization = true;
 		}
 	}
@@ -75,17 +63,13 @@ public class YandeSubfunction {
 	public static List<JSONObject> GetLabelImagesInfo(String whitelabel) {
 		List<JSONObject> imagesInfo = new CopyOnWriteArrayList<>();
 		String url = "https://yande.re/post.xml?tags=" + whitelabel + "&limit=1";
-		Document doc = JsoupUtil.connect(url).proxy(proxyHost, proxyPort).cookies(cookies)
-				.retry(MAX_RETRY, MILLISECONDS_SLEEP).get();
+		Document doc = JsoupUtil.connect(url).proxy(proxyHost, proxyPort).cookies(cookies).retry(MAX_RETRY, MILLISECONDS_SLEEP).get();
 		int postCount = Integer.parseInt(Objects.requireNonNull(doc.selectFirst("posts")).attr("count"));
 		ExecutorService executorService = Executors.newFixedThreadPool(API_MAX_THREADS); // 限制多线程
-		for (int i = 1; i <= (int) Math.ceil((double) postCount / (double) limit); i++, MultiThreadUtil
-				.waitForThread(36)) {
-			executorService.execute(new ParameterizedThread<>(i, (index) -> { // 执行多线程程
-				String whitelabelUrl = "https://yande.re/post.json?tags=" + whitelabel + "&page=" + index + "&limit="
-						+ limit;
-				Response labelInfo = JsoupUtil.connect(whitelabelUrl).proxy(proxyHost, proxyPort).cookies(cookies)
-						.retryStatusCodes(502)
+		for (int i = 1; i <= (int) Math.ceil((double) postCount / (double) limit); i++, MultiThreadUtil.waitForThread(36)) {
+			executorService.execute(new ConsumerThread<>(i, (index) -> { // 执行多线程程
+				String whitelabelUrl = "https://yande.re/post.json?tags=" + whitelabel + "&page=" + index + "&limit=" + limit;
+				Response labelInfo = JsoupUtil.connect(whitelabelUrl).proxy(proxyHost, proxyPort).cookies(cookies).retryStatusCodes(502)
 						.retry(MAX_RETRY, MILLISECONDS_SLEEP).execute();
 				for (JSONObject post : JSONObject.parseArray(labelInfo.body(), JSONObject.class)) {
 					String imageid = post.getString("id");
@@ -95,8 +79,7 @@ public class YandeSubfunction {
 					if (bypass_usedid && usedIds.contains(imageid)) {
 						continue;
 					}
-					if (bypass_blacklabels && Arrays.stream(post.getString("tags").split(" "))
-							.anyMatch(l -> blacklabels.contains(l))) {
+					if (bypass_blacklabels && Arrays.stream(post.getString("tags").split(" ")).anyMatch(l -> blacklabels.contains(l))) {
 						continue;
 					}
 					imagesInfo.add(post);
@@ -110,12 +93,10 @@ public class YandeSubfunction {
 	public static List<JSONObject> GetLabelImagesInfoAsGlobal(List<String> whitelabels) {
 		List<JSONObject> imagesInfo = new CopyOnWriteArrayList<>();
 		ExecutorService executorService = Executors.newFixedThreadPool(API_MAX_THREADS); // 限制多线程
-		for (int i = 1; i <= (int) Math.ceil((double) global_label_amount / (double) limit); i++, MultiThreadUtil
-				.waitForThread(36)) { // 20w是最大值
-			executorService.execute(new ParameterizedThread<>(i, (index) -> { // 执行多线程程
+		for (int i = 1; i <= (int) Math.ceil((double) global_label_amount / (double) limit); i++, MultiThreadUtil.waitForThread(36)) { // 20w是最大值
+			executorService.execute(new ConsumerThread<>(i, (index) -> { // 执行多线程程
 				String whitelabelUrl = "https://yande.re/post.json?page=" + index + "&limit=" + limit;
-				Response res = JsoupUtil.connect(whitelabelUrl).proxy(proxyHost, proxyPort).cookies(cookies)
-						.retryStatusCodes(502)
+				Response res = JsoupUtil.connect(whitelabelUrl).proxy(proxyHost, proxyPort).cookies(cookies).retryStatusCodes(502)
 						.retry(MAX_RETRY, MILLISECONDS_SLEEP).execute();
 				if (res.statusCode() == 500) {
 					throw new RuntimeException("Status: 500 URL: " + whitelabelUrl);
@@ -150,8 +131,7 @@ public class YandeSubfunction {
 	public static List<JSONObject> GetParentImagesInfo(String parentImageId, List<String> childrenImageidLists) {
 		List<JSONObject> imagesInfo = new ArrayList<>();
 		String parentIdUrl = "https://yande.re/post.json?tags=parent%3A" + parentImageId + "&limit=" + limit;
-		Response res = HttpsUtil.connect(parentIdUrl).proxy(proxyHost, proxyPort).cookies(cookies)
-				.retry(MAX_RETRY, MILLISECONDS_SLEEP).execute();
+		Response res = HttpsUtil.connect(parentIdUrl).proxy(proxyHost, proxyPort).cookies(cookies).retry(MAX_RETRY, MILLISECONDS_SLEEP).execute();
 		if (!URIUtils.statusIsOK(res.statusCode())) {
 			System.out.println("连接URL失败：" + parentIdUrl);
 			return imagesInfo;
@@ -168,8 +148,7 @@ public class YandeSubfunction {
 					return GetParentImagesInfo(new_parent_imageid, childrenImageidLists);
 				}
 			}
-			if (bypass_blacklabels
-					&& Arrays.stream(post.getString("tags").split(" ")).anyMatch(l -> blacklabels.contains(l))) {
+			if (bypass_blacklabels && Arrays.stream(post.getString("tags").split(" ")).anyMatch(l -> blacklabels.contains(l))) {
 				continue;
 			}
 			if (bypass_usedid && usedIds.contains(imageid)) {
@@ -183,11 +162,9 @@ public class YandeSubfunction {
 	}
 
 	public static List<JSONObject> GetHeatdayImagesInfo(int year, int month, int day) {
-		String heatdayUrl = "https://yande.re/post/popular_by_day.json?day=" + day + "&month=" + month + "&year="
-				+ year;
+		String heatdayUrl = "https://yande.re/post/popular_by_day.json?day=" + day + "&month=" + month + "&year=" + year;
 		List<JSONObject> imagesInfo = new CopyOnWriteArrayList<>();
-		Response res = JsoupUtil.connect(heatdayUrl).proxy(proxyHost, proxyPort).cookies(cookies)
-				.retry(MAX_RETRY, MILLISECONDS_SLEEP).execute();
+		Response res = JsoupUtil.connect(heatdayUrl).proxy(proxyHost, proxyPort).cookies(cookies).retry(MAX_RETRY, MILLISECONDS_SLEEP).execute();
 		if (!URIUtils.statusIsOK(res.statusCode())) {
 			System.out.println("连接URL失败：" + heatdayUrl);
 			return imagesInfo;
@@ -199,8 +176,7 @@ public class YandeSubfunction {
 				if (bypass_low_quality && Integer.parseInt(imageid) < MAX_LOW_QUALITY) {
 					return;
 				}
-				if (bypass_blacklabels
-						&& Arrays.stream(post.getString("tags").split(" ")).anyMatch(l -> blacklabels.contains(l))) {
+				if (bypass_blacklabels && Arrays.stream(post.getString("tags").split(" ")).anyMatch(l -> blacklabels.contains(l))) {
 					return;
 				}
 				String parentImageid = post.getString("parent_id");
@@ -228,8 +204,7 @@ public class YandeSubfunction {
 		usedIds.add(imageid);
 		String imageUrl = imageInfo.getString("file_url");
 		String md5 = imageInfo.getString("md5");
-		NetworkUtil.Connection config = NetworkUtil.connect(imageUrl).proxy(proxyHost, proxyPort).hash(md5)
-				.retry(MAX_RETRY, MILLISECONDS_SLEEP)
+		NetworkUtil.Connection config = NetworkUtil.connect(imageUrl).proxy(proxyHost, proxyPort).hash(md5).retry(MAX_RETRY, MILLISECONDS_SLEEP)
 				.multithread(DOWN_THREADS);
 		NetworkUtil.Response res;
 		int statusCode;
