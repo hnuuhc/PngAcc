@@ -140,7 +140,7 @@ public class SankakuSubfunction {
                 ChildRout.WriteFileInfo(imageid, already_usedid_filePath);
             }
         } else {
-            logger.error("下载失败 ID: " + imageid + " URL: " + imageidUrl);
+            logger.error("下载失败 Status: " + statusCode + " URL: " + imageidUrl);
         }
     }
 
