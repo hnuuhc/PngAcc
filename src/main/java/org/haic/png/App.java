@@ -101,12 +101,13 @@ public class App {
 
 	public static final int yande_api_maxthreads = 40; // 访问API最大线程
 	public static final int yande_api_limit = 1000; // API单页获取数量限制,最大值为1000
-	public static final int yande_global_label_amount = 10000; // 白名单标签全局方式更新时获取最大数据条目,最大值不能超过20W
+	public static final int yande_global_label_amount = 1000; // 白名单标签全局方式更新时获取最大数据条目,最大值不能超过20W
 
 	public static void main(String[] args) {
 		ChildRout.initialization(); // 初始化
 		YandeImagesDownload.popularDaily(); // Yande 每日热门
 		YandeImagesDownload.label(); // Yande 标签
+		YandeImagesDownload.blackGlobal(); // Yande 最新图片(排除黑名单标签)
 		SankakuImagesDownload.label(); // Sankaku 标签
 		PixivImagesDownload.popularDaily(); // Pixiv 每日热门
 		PixivImagesDownload.suggestion(); // Pixiv 推荐

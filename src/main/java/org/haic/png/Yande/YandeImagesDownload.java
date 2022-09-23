@@ -1,21 +1,22 @@
 package org.haic.png.Yande;
 
+import com.alibaba.fastjson.JSONObject;
+import org.haic.often.FilesUtils;
+import org.haic.often.Multithread.MultiThreadUtil;
+import org.haic.often.ReadWriteUtils;
+import org.haic.png.App;
+import org.haic.png.ChildRout;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
-
-import org.haic.often.FilesUtils;
-import org.haic.often.ReadWriteUtils;
-import org.haic.often.Multithread.MultiThreadUtil;
-import org.haic.png.App;
-import org.haic.png.ChildRout;
-
-import com.alibaba.fastjson.JSONObject;
 
 public class YandeImagesDownload {
 
@@ -31,49 +32,52 @@ public class YandeImagesDownload {
 	private static final String record_date_filePath = App.yande_record_date_filePath; // 日期文件
 	private static final String whitelabels_filePath = App.yande_whitelabels_filePath; // 白名单文件
 
+	private static final Consumer<List<JSONObject>> download = imagesInfo -> {
+		ExecutorService executorService = Executors.newFixedThreadPool(MAX_THREADS); // 限制多线程
+		for (JSONObject imageInfo : imagesInfo) { // 下载
+			executorService.execute(new Thread(() -> { // 程序
+				YandeSubfunction.download(imageInfo);
+			}));
+		}
+		MultiThreadUtil.waitForEnd(executorService); // 等待线程结束
+	};
+
 	public static void label() {
 		YandeSubfunction.initialization(); // 初始化参数
-		List<String> whitelabel_lists = ReadWriteUtils.orgin(whitelabels_filePath).readAsLine();
-		whitelabel_lists.replaceAll(LabelWhite -> LabelWhite.replaceAll(" ", "_"));
-		for (String whitelabel : whitelabel_lists) {
+		List<String> whitelabels = ReadWriteUtils.orgin(whitelabels_filePath).readAsLine();
+		whitelabels.replaceAll(LabelWhite -> LabelWhite.replaceAll(" ", "_"));
+		for (String whitelabel : whitelabels) {
 			if (YandeSubfunction.blacklabels.contains(whitelabel)) {
 				System.out.println("标签冲突,白名单和黑名单存在相同值: " + whitelabel);
-				whitelabel_lists.remove(whitelabel);
+				whitelabels.remove(whitelabel);
 			}
 		}
 		if (global_label) {
 			System.out.print("[Schedule] 正在下载 Yande 标签白名单图片");
-			List<JSONObject> imagesInfo = YandeSubfunction.GetLabelImagesInfoAsGlobal(whitelabel_lists);
-			imagesInfo = imagesInfo.stream()
-					.sorted(Comparator.comparing(l -> l.getInteger("id"), Comparator.reverseOrder()))
-					.collect(Collectors.toList());
+			List<JSONObject> imagesInfo = YandeSubfunction.GetLabelImagesInfoAsGlobal(whitelabels);
+			imagesInfo = imagesInfo.stream().sorted(Comparator.comparing(l -> l.getInteger("id"), Comparator.reverseOrder())).collect(Collectors.toList());
 			System.out.println(" 图片数量：" + imagesInfo.size() + " 存储路径: " + image_folderPath);
-			ExecutorService executorService = Executors.newFixedThreadPool(MAX_THREADS); // 限制多线程
-			for (JSONObject imageInfo : imagesInfo) { // 下载
-				executorService.execute(new Thread(() -> { // 程序
-					YandeSubfunction.download(imageInfo);
-				}));
-			}
-			MultiThreadUtil.waitForEnd(executorService); // 等待线程结束
+			download.accept(imagesInfo);
 		} else {
-			int len = whitelabel_lists.size();
+			int len = whitelabels.size();
 			for (int i = 0; i < len; i++) {
-				String whitelabel = whitelabel_lists.get(i);
+				String whitelabel = whitelabels.get(i);
 				System.out.print("[Schedule] 正在下载 Yande 标签白名单图片,当前标签: " + whitelabel + " 进度：" + (i + 1) + "/" + len);
 				List<JSONObject> imagesInfo = YandeSubfunction.GetLabelImagesInfo(whitelabel);
-				imagesInfo = imagesInfo.stream()
-						.sorted(Comparator.comparing(l -> l.getInteger("id"), Comparator.reverseOrder()))
-						.collect(Collectors.toList());
+				imagesInfo = imagesInfo.stream().sorted(Comparator.comparing(l -> l.getInteger("id"), Comparator.reverseOrder())).collect(Collectors.toList());
 				System.out.println(" 图片数量：" + imagesInfo.size() + " 存储路径: " + image_folderPath);
-				ExecutorService executorService = Executors.newFixedThreadPool(MAX_THREADS); // 限制多线程
-				for (JSONObject imageInfo : imagesInfo) { // 下载
-					executorService.execute(new Thread(() -> { // 程序
-						YandeSubfunction.download(imageInfo);
-					}));
-				}
-				MultiThreadUtil.waitForEnd(executorService); // 等待线程结束
+				download.accept(imagesInfo);
 			}
 		}
+	}
+
+	public static void blackGlobal() {
+		YandeSubfunction.initialization(); // 初始化参数
+		System.out.print("[Schedule] 正在下载 Yande 标签白名单图片");
+		List<JSONObject> imagesInfo = YandeSubfunction.GetLabelImagesInfoAsGlobal(new ArrayList<>());
+		imagesInfo = imagesInfo.stream().sorted(Comparator.comparing(l -> l.getInteger("id"), Comparator.reverseOrder())).collect(Collectors.toList());
+		System.out.println(" 图片数量：" + imagesInfo.size() + " 存储路径: " + image_folderPath);
+		download.accept(imagesInfo);
 	}
 
 	public static void popularDaily() {
@@ -96,16 +100,9 @@ public class YandeImagesDownload {
 			int month = currentDate.getMonthValue();
 			int day = currentDate.getDayOfMonth();
 			System.out.print("[Schedule] 正在下载每日热门图片,当前日期 : " + year + "-" + month + "-" + day);
-			List<JSONObject> imageInfos = YandeSubfunction.GetHeatdayImagesInfo(year, month, day);
-			System.out.println(" 图片数量：" + imageInfos.size() + " 存储路径: " + image_folderPath);
-			ExecutorService executorService = Executors.newFixedThreadPool(MAX_THREADS); // 限制多线程
-			for (JSONObject imageInfo : imageInfos) { // 下载
-				executorService.execute(new Thread(() -> {// 执行多线程程
-					YandeSubfunction.download(imageInfo);
-				}));
-				// MultiThreadUtils.WaitForThread(36);
-			}
-			MultiThreadUtil.waitForEnd(executorService); // 等待线程结束
+			List<JSONObject> imagesInfo = YandeSubfunction.GetHeatdayImagesInfo(year, month, day);
+			System.out.println(" 图片数量：" + imagesInfo.size() + " 存储路径: " + image_folderPath);
+			download.accept(imagesInfo);
 			if (record_date && !recordDateLists.contains(current_date_str)) {
 				ChildRout.WriteFileInfo(current_date_str, record_date_filePath);
 				recordDateLists.add(current_date_str);
