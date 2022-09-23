@@ -1,6 +1,7 @@
 package org.haic.png.Yande;
 
-import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
 import org.haic.often.FilesUtils;
 import org.haic.often.Judge;
 import org.haic.often.Multithread.ConsumerThread;
@@ -73,7 +74,7 @@ public class YandeSubfunction {
 				String whitelabelUrl = "https://yande.re/post.json?tags=" + whitelabel + "&page=" + index + "&limit=" + limit;
 				Response labelInfo = JsoupUtil.connect(whitelabelUrl).proxy(proxyHost, proxyPort).cookies(cookies).retryStatusCodes(502)
 						.retry(MAX_RETRY, MILLISECONDS_SLEEP).execute();
-				for (JSONObject post : JSONObject.parseArray(labelInfo.body(), JSONObject.class)) {
+				for (JSONObject post : JSONArray.parseArray(labelInfo.body()).toList(JSONObject.class)) {
 					String imageid = post.getString("id");
 					if (bypass_low_quality && Integer.parseInt(imageid) < MAX_LOW_QUALITY) {
 						continue;
@@ -109,7 +110,7 @@ public class YandeSubfunction {
 				if (res.statusCode() == 500) {
 					throw new RuntimeException("Status: 500 URL: " + postUrl);
 				}
-				for (JSONObject post : JSONObject.parseArray(res.body(), JSONObject.class)) {
+				for (JSONObject post : JSONArray.parseArray(res.body()).toList(JSONObject.class)) {
 					String imageid = post.getString("id");
 					if (bypass_low_quality && Integer.parseInt(imageid) < MAX_LOW_QUALITY) {
 						continue;
@@ -144,7 +145,7 @@ public class YandeSubfunction {
 			System.out.println("连接URL失败：" + parentIdUrl);
 			return imagesInfo;
 		}
-		for (JSONObject post : JSONObject.parseArray(res.body(), JSONObject.class)) {
+		for (JSONObject post : JSONArray.parseArray(res.body()).toList(JSONObject.class)) {
 			String imageid = post.getString("id");
 			if (bypass_low_quality && Integer.parseInt(imageid) < MAX_LOW_QUALITY) {
 				continue;
@@ -178,7 +179,7 @@ public class YandeSubfunction {
 			return imagesInfo;
 		}
 		ExecutorService executorService = Executors.newFixedThreadPool(API_MAX_THREADS); // 限制多线程
-		for (JSONObject post : JSONObject.parseArray(res.body(), JSONObject.class)) {
+		for (JSONObject post : JSONArray.parseArray(res.body()).toList(JSONObject.class)) {
 			executorService.execute(new Thread(() -> { // 程序
 				String imageid = post.getString("id");
 				if (bypass_low_quality && Integer.parseInt(imageid) < MAX_LOW_QUALITY) {

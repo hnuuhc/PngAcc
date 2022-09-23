@@ -1,6 +1,6 @@
 package org.haic.png.Yande;
 
-import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson2.JSONObject;
 import org.haic.often.FilesUtils;
 import org.haic.often.Multithread.MultiThreadUtil;
 import org.haic.often.ReadWriteUtils;
