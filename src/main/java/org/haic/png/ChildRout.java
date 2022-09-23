@@ -1,15 +1,15 @@
 package org.haic.png;
 
-import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.haic.often.FilesUtils;
-import org.haic.often.ReadWriteUtils;
 import org.haic.often.Multithread.MultiThreadUtil;
 import org.haic.often.Network.JsoupUtil;
 import org.haic.often.Network.Method;
+import org.haic.often.ReadWriteUtils;
 import org.jetbrains.annotations.NotNull;
+
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ChildRout {
 
@@ -57,13 +57,11 @@ public class ChildRout {
 
 	public static void outInfo() {
 		String info = """
-				*********************************************************************************
-				*                                喜欢挑三拣四的图片爬虫                        \t*
-				*                                   作者: haicdust                            \t*
-				*                                    仅供学习使用                              \t*
-				*                            支持网站 Yande Sankaku Pixiv                      \t*
-				*                              最后更新: 2022/2/18 06:46                       \t*
-				*********************************************************************************
+				[INFO] 图片爬虫
+				[INFO] 作者: haicdust
+				[INFO] 仅供学习使用,禁止用于违法用途
+				[INFO] 支持网站 Yande Sankaku Pixiv
+				[INFO] 最后更新: 2022/9/23 18:11
 				""";
 		System.out.println(info);
 	}
@@ -76,14 +74,12 @@ public class ChildRout {
 	 * @param password 密码
 	 * @return cookies
 	 */
-	public static Map<String, String> GetLoginCookies(@NotNull String domin, @NotNull String userName,
-			@NotNull String password) {
+	public static Map<String, String> GetLoginCookies(@NotNull String domin, @NotNull String userName, @NotNull String password) {
 		Map<String, String> params = new HashMap<>();
 		params.put("user[name]", userName);
 		params.put("user[password]", password);
 		String loginUrl = domin + "user/authenticate";
-		return JsoupUtil.connect(loginUrl).timeout(10000).data(params).proxy(App.proxyHost, App.proxyPort)
-				.retry(2, App.MILLISECONDS_SLEEP).errorExit(true)
+		return JsoupUtil.connect(loginUrl).timeout(10000).data(params).proxy(App.proxyHost, App.proxyPort).retry(2, App.MILLISECONDS_SLEEP).errorExit(true)
 				.method(Method.POST).execute().cookies();
 	}
 
