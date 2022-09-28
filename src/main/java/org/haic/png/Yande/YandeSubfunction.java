@@ -2,7 +2,7 @@ package org.haic.png.Yande;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
-import org.haic.often.FilesUtils;
+import org.haic.often.FilesUtil;
 import org.haic.often.Judge;
 import org.haic.often.Multithread.ConsumerThread;
 import org.haic.often.Multithread.MultiThreadUtil;
@@ -10,7 +10,7 @@ import org.haic.often.Network.*;
 import org.haic.often.Network.Download.SionConnection;
 import org.haic.often.Network.Download.SionDownload;
 import org.haic.often.Network.Download.SionResponse;
-import org.haic.often.ReadWriteUtils;
+import org.haic.often.ReadWriteUtil;
 import org.haic.often.RemDuplication;
 import org.haic.png.App;
 import org.haic.png.ChildRout;
@@ -31,7 +31,7 @@ public class YandeSubfunction {
 	private static final boolean bypass_blacklabels = App.yande_bypass_blacklabels; // 标签黑名单
 	private static final boolean MAX_RETRY = App.MAX_RETRY; // 最大重试次数
 
-	private static final String image_folderPath = FilesUtils.getAbsolutePath(App.yande_image_folderPath);
+	private static final String image_folderPath = FilesUtil.getAbsolutePath(App.yande_image_folderPath);
 	private static final String blacklabelFilePath = App.yande_blacklabels_filePath; // 黑名单文件
 	private static final String alreadyUsedIdFilePath = App.yande_already_usedid_filePath; // 记录ID文件
 	private static final String proxyHost = App.proxyHost;
@@ -59,9 +59,9 @@ public class YandeSubfunction {
 	public static void initialization() {
 		if (!isInitialization) {
 			cookies = YandeLogin.GetCookies();
-			blacklabels = ReadWriteUtils.orgin(blacklabelFilePath).readAsLine();
+			blacklabels = ReadWriteUtil.orgin(blacklabelFilePath).readAsLine();
 			blacklabels.replaceAll(label -> label.replaceAll(" ", "_"));
-			usedIds = ReadWriteUtils.orgin(alreadyUsedIdFilePath).readAsLine().parallelStream().map(info -> info.split(" ")[0]).collect(Collectors.toList());
+			usedIds = ReadWriteUtil.orgin(alreadyUsedIdFilePath).readAsLine().parallelStream().map(info -> info.split(" ")[0]).collect(Collectors.toList());
 			isInitialization = true;
 			conn = HttpsUtil.newSession().proxy(proxyHost, proxyPort).cookies(cookies).retry(MAX_RETRY, MILLISECONDS_SLEEP).retryStatusCodes(502);
 		}

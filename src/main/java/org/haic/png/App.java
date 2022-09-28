@@ -99,8 +99,8 @@ public class App {
 
 	public static int yande_api_maxthreads = 40; // 访问API最大线程
 	public static int yande_api_limit = 1000; // API单页获取数量限制,最大值为1000
-	public static int yande_global_min_site = 0; // 全局方式模式时获取数据条目最小起始位
-	public static int yande_global_max_site = 10000; //  全局方式模式时获取数据条目结束位
+	public static int yande_global_min_site = 200001; // 全局方式模式时获取数据条目最小起始位
+	public static int yande_global_max_site = 240000; // 全局方式模式时获取数据条目结束位
 
 	public static void main(String[] args) {
 		ChildRout.initialization(); // 初始化

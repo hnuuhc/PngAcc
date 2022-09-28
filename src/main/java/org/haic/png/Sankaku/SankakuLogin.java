@@ -1,15 +1,15 @@
 package org.haic.png.Sankaku;
 
+import org.haic.often.ChromeBrowser.LocalCookie;
+import org.haic.often.Judge;
+import org.haic.often.ReadWriteUtil;
+import org.haic.often.StringUtil;
+import org.haic.png.App;
+import org.haic.png.ChildRout;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import org.haic.often.Judge;
-import org.haic.often.ReadWriteUtils;
-import org.haic.often.StringUtils;
-import org.haic.often.ChromeBrowser.LocalCookies;
-import org.haic.png.App;
-import org.haic.png.ChildRout;
 
 public class SankakuLogin {
 
@@ -26,13 +26,13 @@ public class SankakuLogin {
 		Map<String, String> cookies = new HashMap<>();
 		if (employ_cookies) {
 			if (browser_cookies) {
-				cookies = LocalCookies.home(browser_userDataPath).getCookiesForDomain("sankakucomplex.com");
+				cookies = LocalCookie.home(browser_userDataPath).getCookiesForDomain("sankakucomplex.com");
 			} else {
-				cookies = StringUtils.toMap(ReadWriteUtils.orgin(cookies_filePath).read(), "; ");
+				cookies = StringUtil.toMap(ReadWriteUtil.orgin(cookies_filePath).read(), "; ");
 				if (cookies.isEmpty() && !Judge.isEmpty(user_name) && !Judge.isEmpty(user_password)) {
 					cookies = ChildRout.GetLoginCookies(domain, user_name, user_password);
-					ChildRout.WriteFileInfo(cookies.entrySet().stream().map(l -> l.getKey() + "=" + l.getValue())
-							.collect(Collectors.joining("; ")), cookies_filePath);
+					ChildRout.WriteFileInfo(cookies.entrySet().stream().map(l -> l.getKey() + "=" + l.getValue()).collect(Collectors.joining("; ")),
+							cookies_filePath);
 				}
 			}
 		}

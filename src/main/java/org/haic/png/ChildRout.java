@@ -1,10 +1,10 @@
 package org.haic.png;
 
-import org.haic.often.FilesUtils;
+import org.haic.often.FilesUtil;
 import org.haic.often.Multithread.MultiThreadUtil;
 import org.haic.often.Network.JsoupUtil;
 import org.haic.often.Network.Method;
-import org.haic.often.ReadWriteUtils;
+import org.haic.often.ReadWriteUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -25,22 +25,22 @@ public class ChildRout {
 	 */
 	public static void createProjectFile() {
 		// Pixiv
-		FilesUtils.createFile(App.pixiv_whitelabels_filePath);
-		FilesUtils.createFile(App.pixiv_blacklabels_filePath);
-		FilesUtils.createFile(App.pixiv_record_date_filePath);
-		FilesUtils.createFile(App.pixiv_already_usedid_filePath);
-		FilesUtils.createFile(App.pixiv_authors_uid_filePath);
+		FilesUtil.createFile(App.pixiv_whitelabels_filePath);
+		FilesUtil.createFile(App.pixiv_blacklabels_filePath);
+		FilesUtil.createFile(App.pixiv_record_date_filePath);
+		FilesUtil.createFile(App.pixiv_already_usedid_filePath);
+		FilesUtil.createFile(App.pixiv_authors_uid_filePath);
 		// Sankaku
-		FilesUtils.createFile(App.sankaku_cookies_filePath);
-		FilesUtils.createFile(App.sankaku_whitelabels_filePath);
-		FilesUtils.createFile(App.sankaku_blacklabels_filePath);
-		FilesUtils.createFile(App.sankaku_already_usedid_filePath);
+		FilesUtil.createFile(App.sankaku_cookies_filePath);
+		FilesUtil.createFile(App.sankaku_whitelabels_filePath);
+		FilesUtil.createFile(App.sankaku_blacklabels_filePath);
+		FilesUtil.createFile(App.sankaku_already_usedid_filePath);
 		// Yande
-		FilesUtils.createFile(App.yande_whitelabels_filePath);
-		FilesUtils.createFile(App.yande_blacklabels_filePath);
-		FilesUtils.createFile(App.yande_record_date_filePath);
-		FilesUtils.createFile(App.yande_already_usedid_filePath);
-		FilesUtils.createFile(App.yande_cookies_filePath);
+		FilesUtil.createFile(App.yande_whitelabels_filePath);
+		FilesUtil.createFile(App.yande_blacklabels_filePath);
+		FilesUtil.createFile(App.yande_record_date_filePath);
+		FilesUtil.createFile(App.yande_already_usedid_filePath);
+		FilesUtil.createFile(App.yande_cookies_filePath);
 	}
 
 	public static void exitTask() {
@@ -52,7 +52,7 @@ public class ChildRout {
 	}
 
 	public static void WriteFileInfo(String str, String filePath) {
-		ReadWriteUtils.orgin(filePath).write(str + "\n");
+		ReadWriteUtil.orgin(filePath).write(str + "\n");
 	}
 
 	public static void outInfo() {
