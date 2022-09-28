@@ -7,6 +7,9 @@ import org.haic.often.Judge;
 import org.haic.often.Multithread.ConsumerThread;
 import org.haic.often.Multithread.MultiThreadUtil;
 import org.haic.often.Network.*;
+import org.haic.often.Network.Download.SionConnection;
+import org.haic.often.Network.Download.SionDownload;
+import org.haic.often.Network.Download.SionResponse;
 import org.haic.often.ReadWriteUtils;
 import org.haic.often.RemDuplication;
 import org.haic.png.App;
@@ -213,18 +216,18 @@ public class YandeSubfunction {
 		usedIds.add(imageid);
 		String imageUrl = imageInfo.getString("file_url");
 		String md5 = imageInfo.getString("md5");
-		NetworkUtil.Connection conn = NetworkUtil.connect(imageUrl).proxy(proxyHost, proxyPort).hash(md5).retry(MAX_RETRY, MILLISECONDS_SLEEP)
-				.multithread(DOWN_THREADS);
-		NetworkUtil.Response res;
+		SionConnection conn = SionDownload.connect(imageUrl).proxy(proxyHost, proxyPort).hash(md5).retry(MAX_RETRY, MILLISECONDS_SLEEP).thread(DOWN_THREADS)
+				.folder(image_folderPath);
+		SionResponse res;
 		int statusCode;
 		do {
-			res = conn.download(image_folderPath);
+			res = conn.execute();
 			statusCode = res.statusCode();
 		} while (statusCode == HttpStatus.SC_TOO_MANY_REQUEST);
 		if (statusCode == HttpStatus.SC_SERVER_RESOURCE_ERROR) {// 尝试修复服务端文件错误
 			imageUrl = "https://files.yande.re/image/" + md5 + "/yande.re." + imageInfo.getString("file_ext");
 			res.clear();
-			statusCode = conn.url(imageUrl).download(image_folderPath).statusCode();
+			statusCode = conn.alterUrl(imageUrl).execute().statusCode();
 		}
 		if (URIUtils.statusIsOK(statusCode)) {
 			App.imageCount.addAndGet(1);

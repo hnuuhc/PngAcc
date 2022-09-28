@@ -7,10 +7,11 @@ import org.haic.often.FilesUtils;
 import org.haic.often.Judge;
 import org.haic.often.Multithread.ConsumerThread;
 import org.haic.often.Multithread.MultiThreadUtil;
+import org.haic.often.Network.Download.SionConnection;
+import org.haic.often.Network.Download.SionDownload;
+import org.haic.often.Network.Download.SionResponse;
 import org.haic.often.Network.JsoupUtil;
 import org.haic.often.Network.Method;
-import org.haic.often.Network.NetworkUtil;
-import org.haic.often.Network.NetworkUtil.Response;
 import org.haic.often.Network.URIUtils;
 import org.haic.often.ReadWriteUtils;
 import org.haic.often.StringUtils;
@@ -339,9 +340,9 @@ public class PixivSubfunction {
 			} else {
 				logger.info("正在下载 ID: " + imageId + " URL: " + imageIdUrl);
 			}
-			int statusCode = NetworkUtil.connect(imagefileUrl).proxy(proxyHost, proxyPort).referrer(imageIdUrl)
-					.fileName(i > 1 ? fileName + " " + i + suffix : fileName + suffix).retry(MAX_RETRY, MILLISECONDS_SLEEP).multithread(DOWN_THREADS)
-					.download(imageFolderPath).statusCode();
+			int statusCode = SionDownload.connect(imagefileUrl).proxy(proxyHost, proxyPort).referrer(imageIdUrl)
+					.fileName(i > 1 ? fileName + " " + i + suffix : fileName + suffix).retry(MAX_RETRY, MILLISECONDS_SLEEP).thread(DOWN_THREADS)
+					.folder(imageFolderPath).execute().statusCode();
 			if (URIUtils.statusIsOK(statusCode)) {
 				App.imageCount.addAndGet(1);
 			} else {
@@ -365,13 +366,14 @@ public class PixivSubfunction {
 			logger.info(log + (fileUrls.size() > 1 ? " " + i + "/" + fileUrls.size() : ""));
 			String suffix = ".jpg";
 
-			NetworkUtil.Connection conn = NetworkUtil.connect(fileUrls.get(i - 1) + suffix).proxy(proxyHost, proxyPort).referrer(imageIdUrl)
-					.fileName(i > 1 ? fileName + " " + suffix : fileName + suffix).multithread(DOWN_THREADS).retry(MAX_RETRY, MILLISECONDS_SLEEP);
-			Response res = conn.download(imageFolderPath);
+			SionConnection conn = SionDownload.connect(fileUrls.get(i - 1) + suffix).proxy(proxyHost, proxyPort).referrer(imageIdUrl)
+					.fileName(i > 1 ? fileName + " " + suffix : fileName + suffix).thread(DOWN_THREADS).retry(MAX_RETRY, MILLISECONDS_SLEEP)
+					.folder(imageFolderPath);
+			SionResponse res = conn.execute();
 			int statusCode = res.statusCode();
 			if (statusCode == HttpStatus.SC_NOT_FOUND) {
 				suffix = ".png";
-				res = conn.url(fileUrls.get(i - 1) + suffix).fileName(i > 1 ? fileName + " " + suffix : fileName + suffix).download(imageFolderPath);
+				res = conn.url(fileUrls.get(i - 1) + suffix).fileName(i > 1 ? fileName + " " + suffix : fileName + suffix).execute();
 				statusCode = res.statusCode();
 			}
 			if (URIUtils.statusIsOK(statusCode)) {

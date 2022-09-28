@@ -4,8 +4,8 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import org.haic.often.FilesUtils;
 import org.haic.often.Judge;
+import org.haic.often.Network.Download.SionDownload;
 import org.haic.often.Network.JsoupUtil;
-import org.haic.often.Network.NetworkUtil;
 import org.haic.often.Network.URIUtils;
 import org.haic.often.ReadWriteUtils;
 import org.haic.often.Tuple.ThreeTuple;
@@ -123,8 +123,8 @@ public class SankakuSubfunction {
 		logger.info("正在下载 ID: " + imageid + " URL: " + imageidUrl);
 		usedIds.add(imageid);
 		imageUrl = Judge.isEmpty(imageUrl) ? getImageUrl(imageid) : imageUrl;
-		int statusCode = NetworkUtil.connect(imageUrl).proxy(proxyHost, proxyPort).fileName(filename).multithread(DOWN_THREADS)
-				.retry(MAX_RETRY, MILLISECONDS_SLEEP).download(image_folderPath).statusCode();
+		int statusCode = SionDownload.connect(imageUrl).proxy(proxyHost, proxyPort).fileName(filename).thread(DOWN_THREADS).retry(MAX_RETRY, MILLISECONDS_SLEEP)
+				.folder(image_folderPath).execute().statusCode();
 		if (URIUtils.statusIsOK(statusCode)) {
 			App.imageCount.addAndGet(1);
 			if (record_usedid) {
