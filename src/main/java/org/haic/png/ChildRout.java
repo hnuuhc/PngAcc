@@ -88,6 +88,7 @@ public class ChildRout {
 	 */
 	public static void exitSystem() {
 		File file = new File(App.image_folderPath);
+		FilesUtil.createFolder(file);
 		new Thread(() -> { // 执行多线程程
 			while (true) {
 				if (file.getFreeSpace() / 1024 / 1024 / 1024 < 10) {
