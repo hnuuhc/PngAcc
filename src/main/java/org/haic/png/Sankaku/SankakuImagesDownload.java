@@ -1,9 +1,9 @@
 package org.haic.png.Sankaku;
 
-import org.haic.often.FilesUtils;
+import org.haic.often.FilesUtil;
 import org.haic.often.Multithread.ConsumerThread;
 import org.haic.often.Multithread.MultiThreadUtil;
-import org.haic.often.ReadWriteUtils;
+import org.haic.often.ReadWriteUtil;
 import org.haic.often.Tuple.ThreeTuple;
 import org.haic.png.App;
 
@@ -14,14 +14,14 @@ import java.util.concurrent.Executors;
 
 public class SankakuImagesDownload {
 
-	private static final String image_folderPath = FilesUtils.getAbsolutePath(App.sankaku_image_folderPath);
+	private static final String image_folderPath = FilesUtil.getAbsolutePath(App.sankaku_image_folderPath);
 	private static final String whitelabels_filePath = App.sankaku_whitelabels_filePath;
 
 	private static final int MAX_THREADS = App.MAX_THREADS; // 多线程下载
 
 	public static void label() {
 		SankakuSubfunction.initialization(); // 初始化参数
-		List<String> whitelabel_lists = ReadWriteUtils.orgin(whitelabels_filePath).readAsLine();
+		List<String> whitelabel_lists = ReadWriteUtil.orgin(whitelabels_filePath).readAsLine();
 		whitelabel_lists.replaceAll(LabelWhite -> LabelWhite.replaceAll(" ", "_"));
 		for (String whitelabel : whitelabel_lists) {
 			if (SankakuSubfunction.blacklabels.contains(whitelabel)) {

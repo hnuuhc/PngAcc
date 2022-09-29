@@ -1,6 +1,6 @@
 package org.haic.png.Pixiv;
 
-import org.haic.often.ChromeBrowser.LocalCookies;
+import org.haic.often.ChromeBrowser.LocalCookie;
 import org.haic.png.App;
 
 import java.util.HashMap;
@@ -14,7 +14,7 @@ public class PixivLogin {
 	public static Map<String, String> GetCookies() {
 		Map<String, String> cookies = new HashMap<>();
 		if (employ_cookies) {
-			cookies = LocalCookies.home(browser_userDataPath).getCookiesForDomain("pixiv.net");
+			cookies = LocalCookie.home(browser_userDataPath).getCookiesForDomain("pixiv.net");
 		}
 		return cookies;
 	}

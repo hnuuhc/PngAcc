@@ -1,9 +1,9 @@
 package org.haic.png.Pixiv;
 
-import org.haic.often.FilesUtils;
+import org.haic.often.FilesUtil;
 import org.haic.often.Multithread.ConsumerThread;
 import org.haic.often.Multithread.MultiThreadUtil;
-import org.haic.often.ReadWriteUtils;
+import org.haic.often.ReadWriteUtil;
 import org.haic.often.Tuple.ThreeTuple;
 import org.haic.png.App;
 import org.haic.png.ChildRout;
@@ -23,7 +23,7 @@ public class PixivImagesDownload {
 	private static final int MAX_API = App.pixiv_api_maxthreads; // API线程
 
 	private static final String startDate = App.pixiv_start_date;
-	private static final String imageFolderPath = FilesUtils.getAbsolutePath(App.pixiv_image_folderPath);
+	private static final String imageFolderPath = FilesUtil.getAbsolutePath(App.pixiv_image_folderPath);
 	private static final String authorsUidFilePath = App.pixiv_authors_uid_filePath;
 	private static final String record_date_filePath = App.pixiv_record_date_filePath;
 	private static final String whitelabels_filePath = App.pixiv_whitelabels_filePath;
@@ -35,12 +35,12 @@ public class PixivImagesDownload {
 
 	public static void author() {
 		PixivSubfunction.initialization(); // 初始化参数
-		List<String> authorsUids = ReadWriteUtils.orgin(authorsUidFilePath).readAsLine();
+		List<String> authorsUids = ReadWriteUtil.orgin(authorsUidFilePath).readAsLine();
 		authorsUids.removeIf(l -> l.equals(""));
 		List<String> followUserIds = PixivSubfunction.GetFollowUserIds();
 		List<String> userIds = new ArrayList<>(followUserIds);
 		userIds.removeAll(authorsUids);
-		if (!ReadWriteUtils.orgin(authorsUidFilePath).writeAsLine(userIds)) { // 同步账户关注的用户
+		if (!ReadWriteUtil.orgin(authorsUidFilePath).writeAsLine(userIds)) { // 同步账户关注的用户
 			throw new RuntimeException("文件写入失败");
 		}
 		userIds.addAll(authorsUids);
@@ -69,7 +69,7 @@ public class PixivImagesDownload {
 
 	public static void label() {
 		PixivSubfunction.initialization(); // 初始化参数
-		List<String> whitelabel_lists = ReadWriteUtils.orgin(whitelabels_filePath).readAsLine();
+		List<String> whitelabel_lists = ReadWriteUtil.orgin(whitelabels_filePath).readAsLine();
 		whitelabel_lists.replaceAll(LabelWhite -> LabelWhite.replaceAll(" ", "_"));
 		for (String whitelabel : whitelabel_lists) {
 			if (PixivSubfunction.blacklabels.contains(whitelabel)) {
@@ -103,7 +103,7 @@ public class PixivImagesDownload {
 		if (unbypass_within_aweek) {
 			within_aweek_date = system_date.minusDays(7);
 		}
-		List<String> record_date_lists = ReadWriteUtils.orgin(record_date_filePath).readAsLine();
+		List<String> record_date_lists = ReadWriteUtil.orgin(record_date_filePath).readAsLine();
 		while (current_date.isBefore(system_date)) {
 			String current_date_str = current_date.format(format);
 			if (bypass_record_date && record_date_lists.contains(current_date_str)) {

@@ -2,12 +2,12 @@ package org.haic.png.Sankaku;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
-import org.haic.often.FilesUtils;
+import org.haic.often.FilesUtil;
 import org.haic.often.Judge;
 import org.haic.often.Network.Download.SionDownload;
 import org.haic.often.Network.JsoupUtil;
-import org.haic.often.Network.URIUtils;
-import org.haic.often.ReadWriteUtils;
+import org.haic.often.Network.URIUtil;
+import org.haic.often.ReadWriteUtil;
 import org.haic.often.Tuple.ThreeTuple;
 import org.haic.often.Tuple.Tuple;
 import org.haic.png.App;
@@ -25,7 +25,7 @@ public class SankakuSubfunction {
 	private static final String sankaku_url = App.sankaku_url;
 	private static final String sankaku_api_url = "https://capi-v2.sankakucomplex.com/posts"; // posts/keyset
 
-	private static final String image_folderPath = FilesUtils.getAbsolutePath(App.sankaku_image_folderPath);
+	private static final String image_folderPath = FilesUtil.getAbsolutePath(App.sankaku_image_folderPath);
 
 	private static final String blacklabels_filePath = App.sankaku_blacklabels_filePath;
 	private static final String already_usedid_filePath = App.sankaku_already_usedid_filePath;
@@ -53,9 +53,9 @@ public class SankakuSubfunction {
 	public static void initialization() {
 		if (!isInitialization) {
 			cookies = SankakuLogin.GetCookies();
-			blacklabels = ReadWriteUtils.orgin(blacklabels_filePath).readAsLine();
+			blacklabels = ReadWriteUtil.orgin(blacklabels_filePath).readAsLine();
 			blacklabels.replaceAll(label -> label.replaceAll(" ", "_"));
-			usedIds = ReadWriteUtils.orgin(already_usedid_filePath).readAsLine().parallelStream().map(info -> info.split(" ")[0]).collect(Collectors.toList());
+			usedIds = ReadWriteUtil.orgin(already_usedid_filePath).readAsLine().parallelStream().map(info -> info.split(" ")[0]).collect(Collectors.toList());
 			isInitialization = true;
 		}
 	}
@@ -98,7 +98,7 @@ public class SankakuSubfunction {
 				}
 				int type = Integer.parseInt(tags_jsonObject.getString("type"));
 				if (type < 6) {
-					if (FilesUtils.nameLength(filename.toString()) + FilesUtils.nameLength(label) + 1 < 220) {
+					if (FilesUtil.nameLength(filename.toString()) + FilesUtil.nameLength(label) + 1 < 220) {
 						filename.append(" ").append(label);
 					} else {
 						break;
@@ -125,7 +125,7 @@ public class SankakuSubfunction {
 		imageUrl = Judge.isEmpty(imageUrl) ? getImageUrl(imageid) : imageUrl;
 		int statusCode = SionDownload.connect(imageUrl).proxy(proxyHost, proxyPort).fileName(filename).thread(DOWN_THREADS).retry(MAX_RETRY, MILLISECONDS_SLEEP)
 				.folder(image_folderPath).execute().statusCode();
-		if (URIUtils.statusIsOK(statusCode)) {
+		if (URIUtil.statusIsOK(statusCode)) {
 			App.imageCount.addAndGet(1);
 			if (record_usedid) {
 				ChildRout.WriteFileInfo(imageid, already_usedid_filePath);
