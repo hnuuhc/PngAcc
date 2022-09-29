@@ -144,7 +144,7 @@ public class YandeSubfunction {
 		List<JSONObject> imagesInfo = new ArrayList<>();
 		String parentIdUrl = "https://yande.re/post.json?tags=parent%3A" + parentImageId + "&limit=" + limit;
 		Response res = HttpsUtil.connect(parentIdUrl).proxy(proxyHost, proxyPort).cookies(cookies).retry(MAX_RETRY, MILLISECONDS_SLEEP).execute();
-		if (!URIUtils.statusIsOK(res.statusCode())) {
+		if (!URIUtil.statusIsOK(res.statusCode())) {
 			System.out.println("连接URL失败：" + parentIdUrl);
 			return imagesInfo;
 		}
@@ -177,7 +177,7 @@ public class YandeSubfunction {
 		String heatdayUrl = "https://yande.re/post/popular_by_day.json?day=" + day + "&month=" + month + "&year=" + year;
 		List<JSONObject> imagesInfo = new CopyOnWriteArrayList<>();
 		Response res = conn.url(heatdayUrl).execute();
-		if (!URIUtils.statusIsOK(res.statusCode())) {
+		if (!URIUtil.statusIsOK(res.statusCode())) {
 			System.out.println("连接URL失败：" + heatdayUrl);
 			return imagesInfo;
 		}
@@ -229,7 +229,7 @@ public class YandeSubfunction {
 			res.clear();
 			statusCode = conn.alterUrl(imageUrl).execute().statusCode();
 		}
-		if (URIUtils.statusIsOK(statusCode)) {
+		if (URIUtil.statusIsOK(statusCode)) {
 			App.imageCount.addAndGet(1);
 			if (record_usedid) {
 				ChildRout.WriteFileInfo(imageid + " " + md5, alreadyUsedIdFilePath);
