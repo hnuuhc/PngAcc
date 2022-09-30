@@ -3,6 +3,5 @@ target/
 logs/
 data/
 .idea/
-conf/
 src/test
 *.iml

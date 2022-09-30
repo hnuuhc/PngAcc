@@ -315,7 +315,7 @@ public class PixivSubfunction {
 					filename.append(" ").append(imagelabel);
 				}
 			}
-			String imageDate = StringUtil.extractRegex(String.valueOf(jsonObject.get("url")), "\\d+/\\d+/\\d+/\\d+/\\d+/\\d+/");
+			String imageDate = StringUtil.extract(String.valueOf(jsonObject.get("url")), "\\d+/\\d+/\\d+/\\d+/\\d+/\\d+/");
 			int pageCount = Integer.parseInt(String.valueOf(jsonObject.get(pageCountName)));
 			String headUrl = "https://i.pximg.net/img-original/img/";
 			for (int count = 0; count < pageCount; count++) { // 获取文件URL,无后缀格式
