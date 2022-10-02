@@ -1,15 +1,15 @@
 package org.haic.png;
 
-import org.haic.often.FilesUtil;
-import org.haic.often.Multithread.MultiThreadUtil;
-import org.haic.often.Network.JsoupUtil;
-import org.haic.often.Network.Method;
-import org.haic.often.ReadWriteUtil;
-import org.jetbrains.annotations.NotNull;
-
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.haic.often.FilesUtil;
+import org.haic.often.ReadWriteUtil;
+import org.haic.often.Multithread.MultiThreadUtil;
+import org.haic.often.Network.JsoupUtil;
+import org.haic.often.Network.Method;
+import org.jetbrains.annotations.NotNull;
 
 public class ChildRout {
 
@@ -74,12 +74,14 @@ public class ChildRout {
 	 * @param password 密码
 	 * @return cookies
 	 */
-	public static Map<String, String> GetLoginCookies(@NotNull String domin, @NotNull String userName, @NotNull String password) {
+	public static Map<String, String> GetLoginCookies(@NotNull String domin, @NotNull String userName,
+			@NotNull String password) {
 		Map<String, String> params = new HashMap<>();
 		params.put("user[name]", userName);
 		params.put("user[password]", password);
 		String loginUrl = domin + "user/authenticate";
-		return JsoupUtil.connect(loginUrl).timeout(10000).data(params).proxy(App.proxyHost, App.proxyPort).retry(2, App.MILLISECONDS_SLEEP).errorExit(true)
+		return JsoupUtil.connect(loginUrl).timeout(10000).data(params).proxy(App.proxyHost, App.proxyPort)
+				.retry(2, App.MILLISECONDS_SLEEP).failThrow(true)
 				.method(Method.POST).execute().cookies();
 	}
 
