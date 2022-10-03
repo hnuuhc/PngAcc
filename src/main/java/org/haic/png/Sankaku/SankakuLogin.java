@@ -26,7 +26,7 @@ public class SankakuLogin {
 		Map<String, String> cookies = new HashMap<>();
 		if (employ_cookies) {
 			if (browser_cookies) {
-				cookies = LocalCookie.home(browser_userDataPath).getCookiesForDomain("sankakucomplex.com");
+				cookies = LocalCookie.home(browser_userDataPath).getFordomain("sankakucomplex.com");
 			} else {
 				cookies = StringUtil.toMap(ReadWriteUtil.orgin(cookies_filePath).read(), "; ");
 				if (cookies.isEmpty() && !Judge.isEmpty(user_name) && !Judge.isEmpty(user_password)) {
