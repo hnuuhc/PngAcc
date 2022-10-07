@@ -27,13 +27,12 @@ public class YandeLogin {
 		Map<String, String> cookies = new HashMap<>();
 		if (employ_cookies) {
 			if (browser_cookies) {
-				cookies = LocalCookie.home(browser_userDataPath).getFordomain("yande.re");
+				cookies = LocalCookie.home(browser_userDataPath).getForDomain("yande.re");
 			} else {
 				cookies = StringUtil.toMap(ReadWriteUtil.orgin(cookies_filePath).read(), "; ");
 				if (cookies.isEmpty() && !Judge.isEmpty(user_name) && !Judge.isEmpty(user_password)) {
 					cookies = ChildRout.GetLoginCookies(domain, user_name, user_password);
-					ChildRout.WriteFileInfo(cookies.entrySet().stream().map(l -> l.getKey() + "=" + l.getValue()).collect(Collectors.joining("; ")),
-							cookies_filePath);
+					ChildRout.WriteFileInfo(cookies.entrySet().stream().map(l -> l.getKey() + "=" + l.getValue()).collect(Collectors.joining("; ")), cookies_filePath);
 				}
 			}
 		}

@@ -14,7 +14,7 @@ public class PixivLogin {
 	public static Map<String, String> GetCookies() {
 		Map<String, String> cookies = new HashMap<>();
 		if (employ_cookies) {
-			cookies = LocalCookie.home(browser_userDataPath).getFordomain("pixiv.net");
+			cookies = LocalCookie.home(browser_userDataPath).getForDomain("pixiv.net");
 		}
 		return cookies;
 	}
