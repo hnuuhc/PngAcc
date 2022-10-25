@@ -1,17 +1,16 @@
 package org.haic.png;
 
-import org.haic.png.Pixiv.PixivImagesDownload;
-import org.haic.png.Sankaku.SankakuImagesDownload;
-import org.haic.png.Sankaku.SankakuLogin;
-import org.haic.png.Yande.YandeImagesDownload;
-
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import org.haic.png.Sankaku.SankakuLogin;
+import org.haic.png.Yande.YandeImagesDownload;
 
 public class App {
 	// **************************** MiXin *********************************
 	public static String image_folderPath = "F:\\Pictures"; // 图片保存路径
-	public static String browser_userDataPath = System.getProperty("user.home") + "\\AppData\\Local\\Microsoft\\Edge\\User Data";
+	public static String browser_userDataPath = System.getProperty("user.home")
+			+ "\\AppData\\Local\\Microsoft\\Edge\\User Data";
 
 	public static String proxyHost = "127.0.0.1"; // 代理主机
 	public static int proxyPort = 7890; // 代理端口
@@ -99,20 +98,21 @@ public class App {
 
 	public static int yande_api_maxthreads = 40; // 访问API最大线程
 	public static int yande_api_limit = 1000; // API单页获取数量限制,最大值为1000
-	public static int yande_global_min_site = 200001; // 全局方式模式时获取数据条目最小起始位
-	public static int yande_global_max_site = 240000; // 全局方式模式时获取数据条目结束位
+	// 350001
+	public static int yande_global_min_site = 0; // 全局方式模式时获取数据条目最小起始位
+	public static int yande_global_max_site = 10000; // 全局方式模式时获取数据条目结束位
 
 	public static void main(String[] args) {
 		ChildRout.initialization(); // 初始化
-		YandeImagesDownload.popularDaily(); // Yande 每日热门
-		YandeImagesDownload.label(); // Yande 标签
+		// YandeImagesDownload.popularDaily(); // Yande 每日热门
+		// YandeImagesDownload.label(); // Yande 标签
 		YandeImagesDownload.blackGlobal(); // Yande 最新图片(排除黑名单标签)
-		SankakuImagesDownload.label(); // Sankaku 标签
-		PixivImagesDownload.popularDaily(); // Pixiv 每日热门
-		PixivImagesDownload.suggestion(); // Pixiv 推荐
-		PixivImagesDownload.author(); // Pixiv 作者
-		PixivImagesDownload.optimal(); // Pixiv 最佳
-		PixivImagesDownload.label(); // Pixiv 标签
+		// SankakuImagesDownload.label(); // Sankaku 标签
+		// PixivImagesDownload.popularDaily(); // Pixiv 每日热门
+		// PixivImagesDownload.suggestion(); // Pixiv 推荐
+		// PixivImagesDownload.author(); // Pixiv 作者
+		// PixivImagesDownload.optimal(); // Pixiv 最佳
+		// PixivImagesDownload.label(); // Pixiv 标签
 		System.exit(0);
 	}
 }

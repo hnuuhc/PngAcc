@@ -1,10 +1,11 @@
 package org.haic.png.Sankaku;
 
-import org.haic.often.FilesUtil;
-import org.haic.often.Multithread.ConsumerThread;
-import org.haic.often.Multithread.MultiThreadUtil;
-import org.haic.often.ReadWriteUtil;
-import org.haic.often.Tuple.ThreeTuple;
+
+import org.haic.often.thread.ConsumerThread;
+import org.haic.often.tuple.ThreeTuple;
+import org.haic.often.util.FileUtil;
+import org.haic.often.util.ReadWriteUtil;
+import org.haic.often.util.ThreadUtil;
 import org.haic.png.App;
 
 import java.util.List;
@@ -14,7 +15,7 @@ import java.util.concurrent.Executors;
 
 public class SankakuImagesDownload {
 
-	private static final String image_folderPath = FilesUtil.getAbsolutePath(App.sankaku_image_folderPath);
+	private static final String image_folderPath = FileUtil.getAbsolutePath(App.sankaku_image_folderPath);
 	private static final String whitelabels_filePath = App.sankaku_whitelabels_filePath;
 
 	private static final int MAX_THREADS = App.MAX_THREADS; // 多线程下载
@@ -38,7 +39,7 @@ public class SankakuImagesDownload {
 					SankakuSubfunction.download(info.first, info.second, info.third);
 				}));
 			}
-			MultiThreadUtil.waitForEnd(executorService); // 等待线程结束
+			ThreadUtil.waitForEnd(executorService); // 等待线程结束
 		}
 		System.out.println("下载 Sankaku 标签图片 已完成 存储路径: " + image_folderPath);
 	}

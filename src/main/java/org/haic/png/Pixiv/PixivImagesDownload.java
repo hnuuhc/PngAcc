@@ -1,10 +1,11 @@
 package org.haic.png.Pixiv;
 
-import org.haic.often.FilesUtil;
-import org.haic.often.Multithread.ConsumerThread;
-import org.haic.often.Multithread.MultiThreadUtil;
-import org.haic.often.ReadWriteUtil;
-import org.haic.often.Tuple.ThreeTuple;
+
+import org.haic.often.thread.ConsumerThread;
+import org.haic.often.tuple.ThreeTuple;
+import org.haic.often.util.FileUtil;
+import org.haic.often.util.ReadWriteUtil;
+import org.haic.often.util.ThreadUtil;
 import org.haic.png.App;
 import org.haic.png.ChildRout;
 
@@ -23,7 +24,7 @@ public class PixivImagesDownload {
 	private static final int MAX_API = App.pixiv_api_maxthreads; // API线程
 
 	private static final String startDate = App.pixiv_start_date;
-	private static final String imageFolderPath = FilesUtil.getAbsolutePath(App.pixiv_image_folderPath);
+	private static final String imageFolderPath = FileUtil.getAbsolutePath(App.pixiv_image_folderPath);
 	private static final String authorsUidFilePath = App.pixiv_authors_uid_filePath;
 	private static final String record_date_filePath = App.pixiv_record_date_filePath;
 	private static final String whitelabels_filePath = App.pixiv_whitelabels_filePath;
@@ -54,7 +55,7 @@ public class PixivImagesDownload {
 					System.out.println(info);
 				}));
 			}
-			MultiThreadUtil.waitForEnd(bookmarkAddExecutorService); // 等待线程结束
+			ThreadUtil.waitForEnd(bookmarkAddExecutorService); // 等待线程结束
 		}
 		authorsUids = userIds;
 		int len = authorsUids.size();
@@ -135,7 +136,7 @@ public class PixivImagesDownload {
 				PixivSubfunction.download(info.first, info.second, info.third);
 			}));
 		}
-		MultiThreadUtil.waitForEnd(executorService); // 等待线程结束
+		ThreadUtil.waitForEnd(executorService); // 等待线程结束
 	}
 
 	private static void MultiThreadNoSuffixDownload(Set<ThreeTuple<String, List<String>, String>> imagesInfo) {
@@ -145,7 +146,7 @@ public class PixivImagesDownload {
 				PixivSubfunction.noSuffixDownload(info.first, info.second, info.third);
 			}));
 		}
-		MultiThreadUtil.waitForEnd(executorService); // 等待线程结束
+		ThreadUtil.waitForEnd(executorService); // 等待线程结束
 	}
 
 }

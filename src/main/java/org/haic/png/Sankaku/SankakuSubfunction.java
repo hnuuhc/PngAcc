@@ -2,19 +2,21 @@ package org.haic.png.Sankaku;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
-import org.haic.often.FilesUtil;
+
 import org.haic.often.Judge;
-import org.haic.often.Network.Download.SionDownload;
-import org.haic.often.Network.JsoupUtil;
-import org.haic.often.Network.URIUtil;
-import org.haic.often.ReadWriteUtil;
-import org.haic.often.Tuple.ThreeTuple;
-import org.haic.often.Tuple.Tuple;
+import org.haic.often.logger.Logger;
+import org.haic.often.logger.LoggerFactory;
+import org.haic.often.net.URIUtil;
+import org.haic.often.net.download.SionDownload;
+import org.haic.often.net.http.JsoupUtil;
+import org.haic.often.tuple.ThreeTuple;
+import org.haic.often.tuple.Tuple;
+import org.haic.often.util.FileUtil;
+import org.haic.often.util.ReadWriteUtil;
 import org.haic.png.App;
 import org.haic.png.ChildRout;
 import org.jsoup.nodes.Document;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -25,7 +27,7 @@ public class SankakuSubfunction {
 	private static final String sankaku_url = App.sankaku_url;
 	private static final String sankaku_api_url = "https://capi-v2.sankakucomplex.com/posts"; // posts/keyset
 
-	private static final String image_folderPath = FilesUtil.getAbsolutePath(App.sankaku_image_folderPath);
+	private static final String image_folderPath = FileUtil.getAbsolutePath(App.sankaku_image_folderPath);
 
 	private static final String blacklabels_filePath = App.sankaku_blacklabels_filePath;
 	private static final String already_usedid_filePath = App.sankaku_already_usedid_filePath;
@@ -62,7 +64,7 @@ public class SankakuSubfunction {
 
 	public static String getImageUrl(String imageid) {
 		Document labelurl_doc = JsoupUtil.connect(sankaku_url + "cn/post/show/" + imageid).timeout(12000).proxy(proxyHost, proxyPort).cookies(cookies)
-				.retry(MAX_RETRY, MILLISECONDS_SLEEP).get();
+										 .retry(MAX_RETRY, MILLISECONDS_SLEEP).get();
 		return "https:" + Objects.requireNonNull(labelurl_doc.selectFirst("a[id='image-link']")).attr("href");
 	}
 
@@ -98,7 +100,7 @@ public class SankakuSubfunction {
 				}
 				int type = Integer.parseInt(tags_jsonObject.getString("type"));
 				if (type < 6) {
-					if (FilesUtil.nameLength(filename.toString()) + FilesUtil.nameLength(label) + 1 < 220) {
+					if (FileUtil.nameLength(filename.toString()) + FileUtil.nameLength(label) + 1 < 220) {
 						filename.append(" ").append(label);
 					} else {
 						break;
@@ -124,7 +126,7 @@ public class SankakuSubfunction {
 		usedIds.add(imageid);
 		imageUrl = Judge.isEmpty(imageUrl) ? getImageUrl(imageid) : imageUrl;
 		int statusCode = SionDownload.connect(imageUrl).proxy(proxyHost, proxyPort).fileName(filename).thread(DOWN_THREADS).retry(MAX_RETRY, MILLISECONDS_SLEEP)
-				.folder(image_folderPath).execute().statusCode();
+									 .folder(image_folderPath).execute().statusCode();
 		if (URIUtil.statusIsOK(statusCode)) {
 			App.imageCount.addAndGet(1);
 			if (record_usedid) {

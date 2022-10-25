@@ -2,20 +2,23 @@ package org.haic.png.Yande;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
-import org.haic.often.FilesUtil;
+
 import org.haic.often.Judge;
-import org.haic.often.Multithread.ConsumerThread;
-import org.haic.often.Multithread.MultiThreadUtil;
-import org.haic.often.Network.*;
-import org.haic.often.Network.Download.SionConnection;
-import org.haic.often.Network.Download.SionDownload;
-import org.haic.often.Network.Download.SionResponse;
-import org.haic.often.ReadWriteUtil;
-import org.haic.often.RemDuplication;
+
+import org.haic.often.logger.Logger;
+import org.haic.often.logger.LoggerFactory;
+import org.haic.often.net.URIUtil;
+import org.haic.often.net.download.SionConnection;
+import org.haic.often.net.download.SionDownload;
+import org.haic.often.net.download.SionResponse;
+import org.haic.often.net.http.*;
+import org.haic.often.thread.ConsumerThread;
+import org.haic.often.util.FileUtil;
+import org.haic.often.util.ListUtil;
+import org.haic.often.util.ReadWriteUtil;
+import org.haic.often.util.ThreadUtil;
 import org.haic.png.App;
 import org.haic.png.ChildRout;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -31,7 +34,7 @@ public class YandeSubfunction {
 	private static final boolean bypass_blacklabels = App.yande_bypass_blacklabels; // 标签黑名单
 	private static final boolean MAX_RETRY = App.MAX_RETRY; // 最大重试次数
 
-	private static final String image_folderPath = FilesUtil.getAbsolutePath(App.yande_image_folderPath);
+	private static final String image_folderPath = FileUtil.getAbsolutePath(App.yande_image_folderPath);
 	private static final String blacklabelFilePath = App.yande_blacklabels_filePath; // 黑名单文件
 	private static final String alreadyUsedIdFilePath = App.yande_already_usedid_filePath; // 记录ID文件
 	private static final String proxyHost = App.proxyHost;
@@ -72,11 +75,11 @@ public class YandeSubfunction {
 		String url = "https://yande.re/post.xml?tags=" + whitelabel + "&limit=1";
 		int postCount = Integer.parseInt(Objects.requireNonNull(conn.url(url).get().selectFirst("posts")).attr("count"));
 		ExecutorService executorService = Executors.newFixedThreadPool(API_MAX_THREADS); // 限制多线程
-		for (int i = 1; i <= (int) Math.ceil((double) postCount / (double) limit); i++, MultiThreadUtil.waitForThread(36)) {
+		for (int i = 1; i <= (int) Math.ceil((double) postCount / (double) limit); i++, ThreadUtil.waitForThread(36)) {
 			executorService.execute(new ConsumerThread<>(i, (index) -> { // 执行多线程程
 				String whitelabelUrl = "https://yande.re/post.json?tags=" + whitelabel + "&page=" + index + "&limit=" + limit;
 				Response labelInfo = JsoupUtil.connect(whitelabelUrl).proxy(proxyHost, proxyPort).cookies(cookies).retryStatusCodes(502)
-						.retry(MAX_RETRY, MILLISECONDS_SLEEP).execute();
+											  .retry(MAX_RETRY, MILLISECONDS_SLEEP).execute();
 				for (JSONObject post : JSONArray.parseArray(labelInfo.body()).toList(JSONObject.class)) {
 					String imageid = post.getString("id");
 					if (bypass_low_quality && Integer.parseInt(imageid) < MAX_LOW_QUALITY) {
@@ -92,7 +95,7 @@ public class YandeSubfunction {
 				}
 			}));
 		}
-		MultiThreadUtil.waitForEnd(executorService); // 等待线程结束
+		ThreadUtil.waitForEnd(executorService); // 等待线程结束
 		return new ArrayList<>(imagesInfo);
 	}
 
@@ -105,7 +108,7 @@ public class YandeSubfunction {
 		int start = Math.max((int) Math.ceil((double) min_site / limit), 1);
 		int page = (int) Math.ceil((double) max_site / limit);
 		ExecutorService executorService = Executors.newFixedThreadPool(API_MAX_THREADS); // 限制多线程
-		for (int i = start; i <= page; i++, MultiThreadUtil.waitForThread(36)) { // 20w是最大值
+		for (int i = start; i <= page; i++, ThreadUtil.waitForThread(36)) { // 20w是最大值
 			executorService.execute(new ConsumerThread<>(i, (index) -> { // 执行多线程程
 				String postUrl = "https://yande.re/post.json?page=" + index + "&limit=" + limit;
 				Response res = HttpsUtil.connect(postUrl).proxy(proxyHost, proxyPort).cookies(cookies).retryStatusCodes(502)
@@ -132,7 +135,7 @@ public class YandeSubfunction {
 				}
 			}));
 		}
-		MultiThreadUtil.waitForEnd(executorService); // 等待线程结束
+		ThreadUtil.waitForEnd(executorService); // 等待线程结束
 		return new ArrayList<>(imagesInfo);
 	}
 
@@ -205,8 +208,8 @@ public class YandeSubfunction {
 				}
 			}));
 		}
-		MultiThreadUtil.waitForEnd(executorService); // 等待线程结束
-		return RemDuplication.HashSet(imagesInfo); // 多线程操作可能会存在重复项,需要去重处理
+		ThreadUtil.waitForEnd(executorService); // 等待线程结束
+		return ListUtil.hashSet(imagesInfo); // 多线程操作可能会存在重复项,需要去重处理
 	}
 
 	public static void download(JSONObject imageInfo) {
@@ -217,7 +220,7 @@ public class YandeSubfunction {
 		String imageUrl = imageInfo.getString("file_url");
 		String md5 = imageInfo.getString("md5");
 		SionConnection conn = SionDownload.connect(imageUrl).proxy(proxyHost, proxyPort).hash(md5).retry(MAX_RETRY, MILLISECONDS_SLEEP).thread(DOWN_THREADS)
-				.folder(image_folderPath);
+										  .folder(image_folderPath);
 		SionResponse res;
 		int statusCode;
 		do {

@@ -4,11 +4,11 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.haic.often.FilesUtil;
-import org.haic.often.ReadWriteUtil;
-import org.haic.often.Multithread.MultiThreadUtil;
-import org.haic.often.Network.JsoupUtil;
-import org.haic.often.Network.Method;
+import org.haic.often.net.Method;
+import org.haic.often.net.http.JsoupUtil;
+import org.haic.often.util.FileUtil;
+import org.haic.often.util.ReadWriteUtil;
+import org.haic.often.util.ThreadUtil;
 import org.jetbrains.annotations.NotNull;
 
 public class ChildRout {
@@ -25,22 +25,22 @@ public class ChildRout {
 	 */
 	public static void createProjectFile() {
 		// Pixiv
-		FilesUtil.createFile(App.pixiv_whitelabels_filePath);
-		FilesUtil.createFile(App.pixiv_blacklabels_filePath);
-		FilesUtil.createFile(App.pixiv_record_date_filePath);
-		FilesUtil.createFile(App.pixiv_already_usedid_filePath);
-		FilesUtil.createFile(App.pixiv_authors_uid_filePath);
+		FileUtil.createFile(App.pixiv_whitelabels_filePath);
+		FileUtil.createFile(App.pixiv_blacklabels_filePath);
+		FileUtil.createFile(App.pixiv_record_date_filePath);
+		FileUtil.createFile(App.pixiv_already_usedid_filePath);
+		FileUtil.createFile(App.pixiv_authors_uid_filePath);
 		// Sankaku
-		FilesUtil.createFile(App.sankaku_cookies_filePath);
-		FilesUtil.createFile(App.sankaku_whitelabels_filePath);
-		FilesUtil.createFile(App.sankaku_blacklabels_filePath);
-		FilesUtil.createFile(App.sankaku_already_usedid_filePath);
+		FileUtil.createFile(App.sankaku_cookies_filePath);
+		FileUtil.createFile(App.sankaku_whitelabels_filePath);
+		FileUtil.createFile(App.sankaku_blacklabels_filePath);
+		FileUtil.createFile(App.sankaku_already_usedid_filePath);
 		// Yande
-		FilesUtil.createFile(App.yande_whitelabels_filePath);
-		FilesUtil.createFile(App.yande_blacklabels_filePath);
-		FilesUtil.createFile(App.yande_record_date_filePath);
-		FilesUtil.createFile(App.yande_already_usedid_filePath);
-		FilesUtil.createFile(App.yande_cookies_filePath);
+		FileUtil.createFile(App.yande_whitelabels_filePath);
+		FileUtil.createFile(App.yande_blacklabels_filePath);
+		FileUtil.createFile(App.yande_record_date_filePath);
+		FileUtil.createFile(App.yande_already_usedid_filePath);
+		FileUtil.createFile(App.yande_cookies_filePath);
 	}
 
 	public static void exitTask() {
@@ -81,8 +81,8 @@ public class ChildRout {
 		params.put("user[password]", password);
 		String loginUrl = domin + "user/authenticate";
 		return JsoupUtil.connect(loginUrl).timeout(10000).data(params).proxy(App.proxyHost, App.proxyPort)
-				.retry(2, App.MILLISECONDS_SLEEP).failThrow(true)
-				.method(Method.POST).execute().cookies();
+						.retry(2, App.MILLISECONDS_SLEEP).failThrow(true)
+						.method(Method.POST).execute().cookies();
 	}
 
 	/**
@@ -90,14 +90,14 @@ public class ChildRout {
 	 */
 	public static void exitSystem() {
 		File file = new File(App.image_folderPath);
-		FilesUtil.createFolder(file);
+		FileUtil.createFolder(file);
 		new Thread(() -> { // 执行多线程程
 			while (true) {
 				if (file.getFreeSpace() / 1024 / 1024 / 1024 < 10) {
 					System.out.println("存储空间不足,停止程序!");
 					System.exit(1);
 				}
-				MultiThreadUtil.waitForThread(10000);
+				ThreadUtil.waitForThread(10000);
 			}
 		}).start();
 

@@ -11,9 +11,9 @@ import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import org.haic.often.FilesUtil;
-import org.haic.often.ReadWriteUtil;
-import org.haic.often.Multithread.MultiThreadUtil;
+import org.haic.often.util.FileUtil;
+import org.haic.often.util.ReadWriteUtil;
+import org.haic.often.util.ThreadUtil;
 import org.haic.png.App;
 import org.haic.png.ChildRout;
 
@@ -29,7 +29,7 @@ public class YandeImagesDownload {
 	private static final boolean global_label = App.yande_global_label;
 
 	private static final String start_date = App.yande_start_date; // 开始日期
-	private static final String image_folderPath = FilesUtil.getAbsolutePath(App.yande_image_folderPath); // 图片文件夹
+	private static final String image_folderPath = FileUtil.getAbsolutePath(App.yande_image_folderPath); // 图片文件夹
 	private static final String record_date_filePath = App.yande_record_date_filePath; // 日期文件
 	private static final String whitelabels_filePath = App.yande_whitelabels_filePath; // 白名单文件
 
@@ -40,7 +40,7 @@ public class YandeImagesDownload {
 				YandeSubfunction.download(imageInfo);
 			}));
 		}
-		MultiThreadUtil.waitForEnd(executorService); // 等待线程结束
+		ThreadUtil.waitForEnd(executorService); // 等待线程结束
 	};
 
 	public static void label() {

@@ -1,6 +1,7 @@
 package org.haic.png.Pixiv;
 
-import org.haic.often.ChromeBrowser.LocalCookie;
+
+import org.haic.often.chrome.browser.LocalCookie;
 import org.haic.png.App;
 
 import java.util.HashMap;

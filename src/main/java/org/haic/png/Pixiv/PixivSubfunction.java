@@ -3,25 +3,26 @@ package org.haic.png.Pixiv;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import org.apache.http.HttpStatus;
-import org.haic.often.FilesUtil;
-import org.haic.often.Judge;
-import org.haic.often.Multithread.ConsumerThread;
-import org.haic.often.Multithread.MultiThreadUtil;
-import org.haic.often.Network.Download.SionConnection;
-import org.haic.often.Network.Download.SionDownload;
-import org.haic.often.Network.Download.SionResponse;
-import org.haic.often.Network.JsoupUtil;
-import org.haic.often.Network.Method;
-import org.haic.often.Network.URIUtil;
-import org.haic.often.ReadWriteUtil;
-import org.haic.often.StringUtil;
-import org.haic.often.Tuple.ThreeTuple;
-import org.haic.often.Tuple.Tuple;
+
+import org.haic.often.logger.Logger;
+import org.haic.often.logger.LoggerFactory;
+import org.haic.often.net.Method;
+import org.haic.often.net.URIUtil;
+import org.haic.often.net.download.SionConnection;
+import org.haic.often.net.download.SionDownload;
+import org.haic.often.net.download.SionResponse;
+import org.haic.often.net.http.JsoupUtil;
+import org.haic.often.thread.ConsumerThread;
+import org.haic.often.tuple.ThreeTuple;
+import org.haic.often.tuple.Tuple;
+import org.haic.often.util.FileUtil;
+import org.haic.often.util.ReadWriteUtil;
+import org.haic.often.util.StringUtil;
+import org.haic.often.util.ThreadUtil;
 import org.haic.png.App;
 import org.haic.png.ChildRout;
 import org.jsoup.nodes.Document;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -34,7 +35,7 @@ public class PixivSubfunction {
 	private static final String domain = App.pixiv_url;
 	private static final String blacklabelFilePath = App.pixiv_blacklabels_filePath;
 	private static final String alreadyUsedIdFilePath = App.pixiv_already_usedid_filePath;
-	private static final String imageFolderPath = FilesUtil.getAbsolutePath(App.pixiv_image_folderPath);
+	private static final String imageFolderPath = FileUtil.getAbsolutePath(App.pixiv_image_folderPath);
 
 	private static final String proxyHost = App.proxyHost;
 	private static final int proxyPort = App.proxyPort;
@@ -71,7 +72,7 @@ public class PixivSubfunction {
 			usedIds = ReadWriteUtil.orgin(alreadyUsedIdFilePath).readAsLine();
 			x_csrf_token = JSONObject.parseObject(Objects.requireNonNull(
 					JsoupUtil.connect(domain).cookies(cookies).proxy(proxyHost, proxyPort).retry(MAX_RETRY, MILLISECONDS_SLEEP).get()
-							.selectFirst("meta[id='meta-global-data']")).attr("content")).getString("token");
+							 .selectFirst("meta[id='meta-global-data']")).attr("content")).getString("token");
 			isInitialization = true;
 		}
 	}
@@ -92,7 +93,7 @@ public class PixivSubfunction {
 				imagesInfo.addAll(imageInfosOfJSONArray(data));
 			}));
 		}
-		MultiThreadUtil.waitForEnd(executorService); // 等待线程结束
+		ThreadUtil.waitForEnd(executorService); // 等待线程结束
 		return imagesInfo;
 	}
 
@@ -116,19 +117,19 @@ public class PixivSubfunction {
 			}
 			executorService.execute(new Thread(() -> { // 程序
 				ThreeTuple<String, List<String>, String> imageInfo = GetImageUrls(imageId);
-				if (!Judge.isNull(imageInfo)) {
+				if (imageInfo!=null) {
 					imagesInfo.add(imageInfo);
 				}
 			}));
 		}
-		MultiThreadUtil.waitForEnd(executorService); // 等待线程结束
+		ThreadUtil.waitForEnd(executorService); // 等待线程结束
 		return imagesInfo;
 	}
 
 	public static ThreeTuple<String, List<String>, String> GetImageUrls(String imageId) {
 		String url = "https://www.pixiv.net/ajax/illust/" + imageId; // API接口
 		JSONObject body = null;
-		while (Judge.isNull(body)) {
+		while (body == null) {
 			JSONObject info = JSONObject.parseObject(
 					JsoupUtil.connect(url).proxy(proxyHost, proxyPort).cookies(cookies).retry(MAX_RETRY, MILLISECONDS_SLEEP).get().text());
 			if (!info.getBoolean("error")) {
@@ -142,7 +143,7 @@ public class PixivSubfunction {
 			if (bypassBlacklabel && blacklabels.contains(imagelabel)) {
 				return null;
 			}
-			if (!imagelabel.contains("users入り") && FilesUtil.nameLength(fileName.toString()) + FilesUtil.nameLength(imagelabel) + 1 < 220) {
+			if (!imagelabel.contains("users入り") && FileUtil.nameLength(fileName.toString()) + FileUtil.nameLength(imagelabel) + 1 < 220) {
 				fileName.append(" ").append(imagelabel);
 			}
 		}
@@ -172,7 +173,7 @@ public class PixivSubfunction {
 		params.put("format", "json");
 		params.put("user_id", userId);
 		return URIUtil.statusIsOK(JsoupUtil.connect(url).header("x-csrf-token", x_csrf_token).proxy(proxyHost, proxyPort).data(params).cookies(cookies)
-				.retry(1, MILLISECONDS_SLEEP).method(Method.POST).execute().statusCode());
+										   .retry(1, MILLISECONDS_SLEEP).method(Method.POST).execute().statusCode());
 	}
 
 	/**
@@ -214,7 +215,7 @@ public class PixivSubfunction {
 				}
 			}));
 		}
-		MultiThreadUtil.waitForEnd(executorService); // 等待线程结束
+		ThreadUtil.waitForEnd(executorService); // 等待线程结束
 		return userIds;
 	}
 
@@ -265,7 +266,7 @@ public class PixivSubfunction {
 				imagesInfo.addAll(imageInfosOfJSONArray(contents, "illust_type", "illust_id", "illust_page_count"));
 			}));
 		}
-		MultiThreadUtil.waitForEnd(executorService);
+		ThreadUtil.waitForEnd(executorService);
 		return new HashSet<>(imagesInfo);
 	}
 
@@ -311,7 +312,7 @@ public class PixivSubfunction {
 				if (bypassBlacklabel && blacklabels.contains(imagelabel)) {
 					continue for_jsonArray;
 				}
-				if (!imagelabel.contains("users入り") && FilesUtil.nameLength(filename.toString()) + FilesUtil.nameLength(imagelabel) + 1 < 220) {
+				if (!imagelabel.contains("users入り") && FileUtil.nameLength(filename.toString()) + FileUtil.nameLength(imagelabel) + 1 < 220) {
 					filename.append(" ").append(imagelabel);
 				}
 			}
@@ -341,8 +342,8 @@ public class PixivSubfunction {
 				logger.info("正在下载 ID: " + imageId + " URL: " + imageIdUrl);
 			}
 			int statusCode = SionDownload.connect(imagefileUrl).proxy(proxyHost, proxyPort).referrer(imageIdUrl)
-					.fileName(i > 1 ? fileName + " " + i + suffix : fileName + suffix).retry(MAX_RETRY, MILLISECONDS_SLEEP).thread(DOWN_THREADS)
-					.folder(imageFolderPath).execute().statusCode();
+										 .fileName(i > 1 ? fileName + " " + i + suffix : fileName + suffix).retry(MAX_RETRY, MILLISECONDS_SLEEP).thread(DOWN_THREADS)
+										 .folder(imageFolderPath).execute().statusCode();
 			if (URIUtil.statusIsOK(statusCode)) {
 				App.imageCount.addAndGet(1);
 			} else {
@@ -367,8 +368,8 @@ public class PixivSubfunction {
 			String suffix = ".jpg";
 
 			SionConnection conn = SionDownload.connect(fileUrls.get(i - 1) + suffix).proxy(proxyHost, proxyPort).referrer(imageIdUrl)
-					.fileName(i > 1 ? fileName + " " + suffix : fileName + suffix).thread(DOWN_THREADS).retry(MAX_RETRY, MILLISECONDS_SLEEP)
-					.folder(imageFolderPath);
+											  .fileName(i > 1 ? fileName + " " + suffix : fileName + suffix).thread(DOWN_THREADS).retry(MAX_RETRY, MILLISECONDS_SLEEP)
+											  .folder(imageFolderPath);
 			SionResponse res = conn.execute();
 			int statusCode = res.statusCode();
 			if (statusCode == HttpStatus.SC_NOT_FOUND) {
