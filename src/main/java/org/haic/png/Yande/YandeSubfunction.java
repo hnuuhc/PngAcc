@@ -75,7 +75,7 @@ public class YandeSubfunction {
 		String url = "https://yande.re/post.xml?tags=" + whitelabel + "&limit=1";
 		int postCount = Integer.parseInt(Objects.requireNonNull(conn.url(url).get().selectFirst("posts")).attr("count"));
 		ExecutorService executorService = Executors.newFixedThreadPool(API_MAX_THREADS); // 限制多线程
-		for (int i = 1; i <= (int) Math.ceil((double) postCount / (double) limit); i++, ThreadUtil.waitForThread(36)) {
+		for (int i = 1; i <= (int) Math.ceil((double) postCount / (double) limit); i++, ThreadUtil.waitThread(36)) {
 			executorService.execute(new ConsumerThread<>(i, (index) -> { // 执行多线程程
 				String whitelabelUrl = "https://yande.re/post.json?tags=" + whitelabel + "&page=" + index + "&limit=" + limit;
 				Response labelInfo = JsoupUtil.connect(whitelabelUrl).proxy(proxyHost, proxyPort).cookies(cookies).retryStatusCodes(502)
@@ -95,7 +95,7 @@ public class YandeSubfunction {
 				}
 			}));
 		}
-		ThreadUtil.waitForEnd(executorService); // 等待线程结束
+		ThreadUtil.waitEnd(executorService); // 等待线程结束
 		return new ArrayList<>(imagesInfo);
 	}
 
@@ -108,7 +108,7 @@ public class YandeSubfunction {
 		int start = Math.max((int) Math.ceil((double) min_site / limit), 1);
 		int page = (int) Math.ceil((double) max_site / limit);
 		ExecutorService executorService = Executors.newFixedThreadPool(API_MAX_THREADS); // 限制多线程
-		for (int i = start; i <= page; i++, ThreadUtil.waitForThread(36)) { // 20w是最大值
+		for (int i = start; i <= page; i++, ThreadUtil.waitThread(36)) { // 20w是最大值
 			executorService.execute(new ConsumerThread<>(i, (index) -> { // 执行多线程程
 				String postUrl = "https://yande.re/post.json?page=" + index + "&limit=" + limit;
 				Response res = HttpsUtil.connect(postUrl).proxy(proxyHost, proxyPort).cookies(cookies).retryStatusCodes(502)
@@ -135,7 +135,7 @@ public class YandeSubfunction {
 				}
 			}));
 		}
-		ThreadUtil.waitForEnd(executorService); // 等待线程结束
+		ThreadUtil.waitEnd(executorService); // 等待线程结束
 		return new ArrayList<>(imagesInfo);
 	}
 
@@ -208,7 +208,7 @@ public class YandeSubfunction {
 				}
 			}));
 		}
-		ThreadUtil.waitForEnd(executorService); // 等待线程结束
+		ThreadUtil.waitEnd(executorService); // 等待线程结束
 		return ListUtil.hashSet(imagesInfo); // 多线程操作可能会存在重复项,需要去重处理
 	}
 

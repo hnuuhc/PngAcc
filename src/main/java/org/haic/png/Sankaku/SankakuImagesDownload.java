@@ -39,7 +39,7 @@ public class SankakuImagesDownload {
 					SankakuSubfunction.download(info.first, info.second, info.third);
 				}));
 			}
-			ThreadUtil.waitForEnd(executorService); // 等待线程结束
+			ThreadUtil.waitEnd(executorService); // 等待线程结束
 		}
 		System.out.println("下载 Sankaku 标签图片 已完成 存储路径: " + image_folderPath);
 	}

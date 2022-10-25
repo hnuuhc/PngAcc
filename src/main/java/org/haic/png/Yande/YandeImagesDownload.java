@@ -40,7 +40,7 @@ public class YandeImagesDownload {
 				YandeSubfunction.download(imageInfo);
 			}));
 		}
-		ThreadUtil.waitForEnd(executorService); // 等待线程结束
+		ThreadUtil.waitEnd(executorService); // 等待线程结束
 	};
 
 	public static void label() {

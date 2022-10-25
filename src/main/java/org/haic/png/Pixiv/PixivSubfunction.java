@@ -93,7 +93,7 @@ public class PixivSubfunction {
 				imagesInfo.addAll(imageInfosOfJSONArray(data));
 			}));
 		}
-		ThreadUtil.waitForEnd(executorService); // 等待线程结束
+		ThreadUtil.waitEnd(executorService); // 等待线程结束
 		return imagesInfo;
 	}
 
@@ -122,7 +122,7 @@ public class PixivSubfunction {
 				}
 			}));
 		}
-		ThreadUtil.waitForEnd(executorService); // 等待线程结束
+		ThreadUtil.waitEnd(executorService); // 等待线程结束
 		return imagesInfo;
 	}
 
@@ -215,7 +215,7 @@ public class PixivSubfunction {
 				}
 			}));
 		}
-		ThreadUtil.waitForEnd(executorService); // 等待线程结束
+		ThreadUtil.waitEnd(executorService); // 等待线程结束
 		return userIds;
 	}
 
@@ -266,7 +266,7 @@ public class PixivSubfunction {
 				imagesInfo.addAll(imageInfosOfJSONArray(contents, "illust_type", "illust_id", "illust_page_count"));
 			}));
 		}
-		ThreadUtil.waitForEnd(executorService);
+		ThreadUtil.waitEnd(executorService);
 		return new HashSet<>(imagesInfo);
 	}
 

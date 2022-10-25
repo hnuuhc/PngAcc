@@ -55,7 +55,7 @@ public class PixivImagesDownload {
 					System.out.println(info);
 				}));
 			}
-			ThreadUtil.waitForEnd(bookmarkAddExecutorService); // 等待线程结束
+			ThreadUtil.waitEnd(bookmarkAddExecutorService); // 等待线程结束
 		}
 		authorsUids = userIds;
 		int len = authorsUids.size();
@@ -136,7 +136,7 @@ public class PixivImagesDownload {
 				PixivSubfunction.download(info.first, info.second, info.third);
 			}));
 		}
-		ThreadUtil.waitForEnd(executorService); // 等待线程结束
+		ThreadUtil.waitEnd(executorService); // 等待线程结束
 	}
 
 	private static void MultiThreadNoSuffixDownload(Set<ThreeTuple<String, List<String>, String>> imagesInfo) {
@@ -146,7 +146,7 @@ public class PixivImagesDownload {
 				PixivSubfunction.noSuffixDownload(info.first, info.second, info.third);
 			}));
 		}
-		ThreadUtil.waitForEnd(executorService); // 等待线程结束
+		ThreadUtil.waitEnd(executorService); // 等待线程结束
 	}
 
 }

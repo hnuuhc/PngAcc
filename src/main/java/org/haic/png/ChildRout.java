@@ -97,7 +97,7 @@ public class ChildRout {
 					System.out.println("存储空间不足,停止程序!");
 					System.exit(1);
 				}
-				ThreadUtil.waitForThread(10000);
+				ThreadUtil.waitThread(10000);
 			}
 		}).start();
 
