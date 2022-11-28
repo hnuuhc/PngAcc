@@ -1,17 +1,28 @@
 package org.haic.png.Yande;
 
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import org.haic.often.Judge;
-
 import org.haic.often.logger.Logger;
 import org.haic.often.logger.LoggerFactory;
 import org.haic.often.net.URIUtil;
 import org.haic.often.net.download.SionConnection;
 import org.haic.often.net.download.SionDownload;
 import org.haic.often.net.download.SionResponse;
-import org.haic.often.net.http.*;
+import org.haic.often.net.http.Connection;
+import org.haic.often.net.http.HttpStatus;
+import org.haic.often.net.http.HttpsUtil;
+import org.haic.often.net.http.JsoupUtil;
+import org.haic.often.net.http.Response;
 import org.haic.often.thread.ConsumerThread;
 import org.haic.often.util.FileUtil;
 import org.haic.often.util.ListUtil;
@@ -20,11 +31,8 @@ import org.haic.often.util.ThreadUtil;
 import org.haic.png.App;
 import org.haic.png.ChildRout;
 
-import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
 
 public class YandeSubfunction {
 
@@ -45,7 +53,7 @@ public class YandeSubfunction {
 	private static final int API_MAX_THREADS = App.yande_api_maxthreads; // 访问API最大线程
 	private static final int limit = App.yande_api_limit; // API单页获取数量限制
 	private static final int global_min_site = App.yande_global_min_site;
-	private static final int global_max_site = App.yande_global_max_site;
+	private static final int global_site = App.yande_global_site;
 	private static final int MAX_LOW_QUALITY = 250000;
 
 	private static boolean isInitialization; // 判断参数是否已初始化
@@ -64,22 +72,27 @@ public class YandeSubfunction {
 			cookies = YandeLogin.GetCookies();
 			blacklabels = ReadWriteUtil.orgin(blacklabelFilePath).readAsLine();
 			blacklabels.replaceAll(label -> label.replaceAll(" ", "_"));
-			usedIds = ReadWriteUtil.orgin(alreadyUsedIdFilePath).readAsLine().parallelStream().map(info -> info.split(" ")[0]).collect(Collectors.toList());
+			usedIds = ReadWriteUtil.orgin(alreadyUsedIdFilePath).readAsLine().parallelStream()
+					.map(info -> info.split(" ")[0]).collect(Collectors.toList());
 			isInitialization = true;
-			conn = HttpsUtil.newSession().proxy(proxyHost, proxyPort).cookies(cookies).retry(MAX_RETRY, MILLISECONDS_SLEEP).retryStatusCodes(502);
+			conn = HttpsUtil.newSession().proxy(proxyHost, proxyPort).cookies(cookies)
+					.retry(MAX_RETRY, MILLISECONDS_SLEEP).retryStatusCodes(502);
 		}
 	}
 
 	public static List<JSONObject> GetLabelImagesInfo(String whitelabel) {
 		List<JSONObject> imagesInfo = new CopyOnWriteArrayList<>();
 		String url = "https://yande.re/post.xml?tags=" + whitelabel + "&limit=1";
-		int postCount = Integer.parseInt(Objects.requireNonNull(conn.url(url).get().selectFirst("posts")).attr("count"));
+		int postCount = Integer
+				.parseInt(Objects.requireNonNull(conn.url(url).get().selectFirst("posts")).attr("count"));
 		ExecutorService executorService = Executors.newFixedThreadPool(API_MAX_THREADS); // 限制多线程
 		for (int i = 1; i <= (int) Math.ceil((double) postCount / (double) limit); i++, ThreadUtil.waitThread(36)) {
-			executorService.execute(new ConsumerThread<>(i, (index) -> { // 执行多线程程
-				String whitelabelUrl = "https://yande.re/post.json?tags=" + whitelabel + "&page=" + index + "&limit=" + limit;
-				Response labelInfo = JsoupUtil.connect(whitelabelUrl).proxy(proxyHost, proxyPort).cookies(cookies).retryStatusCodes(502)
-											  .retry(MAX_RETRY, MILLISECONDS_SLEEP).execute();
+			executorService.execute(new ConsumerThread(i, (index) -> { // 执行多线程程
+				String whitelabelUrl = "https://yande.re/post.json?tags=" + whitelabel + "&page=" + index + "&limit="
+						+ limit;
+				Response labelInfo = JsoupUtil.connect(whitelabelUrl).proxy(proxyHost, proxyPort).cookies(cookies)
+						.retryStatusCodes(502)
+						.retry(MAX_RETRY, MILLISECONDS_SLEEP).execute();
 				for (JSONObject post : JSONArray.parseArray(labelInfo.body()).toList(JSONObject.class)) {
 					String imageid = post.getString("id");
 					if (bypass_low_quality && Integer.parseInt(imageid) < MAX_LOW_QUALITY) {
@@ -88,7 +101,8 @@ public class YandeSubfunction {
 					if (bypass_usedid && usedIds.contains(imageid)) {
 						continue;
 					}
-					if (bypass_blacklabels && Arrays.stream(post.getString("tags").split(" ")).anyMatch(l -> blacklabels.contains(l))) {
+					if (bypass_blacklabels && Arrays.stream(post.getString("tags").split(" "))
+							.anyMatch(l -> blacklabels.contains(l))) {
 						continue;
 					}
 					imagesInfo.add(post);
@@ -101,17 +115,19 @@ public class YandeSubfunction {
 
 	public static List<JSONObject> GetLabelImagesInfoAsGlobal(List<String> whitelabels) {
 		String limitUrl = "https://yande.re/post.xml?limit=1";
-		int max_amount = Integer.parseInt(Objects.requireNonNull(conn.url(limitUrl).get().selectFirst("posts")).attr("count"));
+		int max_amount = Integer
+				.parseInt(Objects.requireNonNull(conn.url(limitUrl).get().selectFirst("posts")).attr("count"));
 		int min_site = Math.max(global_min_site, 0);
-		int max_site = Math.min(global_max_site, max_amount);
+		int max_site = Math.min(global_min_site + global_site, max_amount);
 		List<JSONObject> imagesInfo = new CopyOnWriteArrayList<>();
 		int start = Math.max((int) Math.ceil((double) min_site / limit), 1);
 		int page = (int) Math.ceil((double) max_site / limit);
 		ExecutorService executorService = Executors.newFixedThreadPool(API_MAX_THREADS); // 限制多线程
 		for (int i = start; i <= page; i++, ThreadUtil.waitThread(36)) { // 20w是最大值
-			executorService.execute(new ConsumerThread<>(i, (index) -> { // 执行多线程程
+			executorService.execute(new ConsumerThread(i, (index) -> { // 执行多线程程
 				String postUrl = "https://yande.re/post.json?page=" + index + "&limit=" + limit;
-				Response res = HttpsUtil.connect(postUrl).proxy(proxyHost, proxyPort).cookies(cookies).retryStatusCodes(502)
+				Response res = HttpsUtil.connect(postUrl).proxy(proxyHost, proxyPort).cookies(cookies)
+						.retryStatusCodes(502)
 						.retry(MAX_RETRY, MILLISECONDS_SLEEP).execute();
 				if (res.statusCode() == 500) {
 					throw new RuntimeException("Status: 500 URL: " + postUrl);
@@ -146,7 +162,8 @@ public class YandeSubfunction {
 	public static List<JSONObject> GetParentImagesInfo(String parentImageId, List<String> childrenImageidLists) {
 		List<JSONObject> imagesInfo = new ArrayList<>();
 		String parentIdUrl = "https://yande.re/post.json?tags=parent%3A" + parentImageId + "&limit=" + limit;
-		Response res = HttpsUtil.connect(parentIdUrl).proxy(proxyHost, proxyPort).cookies(cookies).retry(MAX_RETRY, MILLISECONDS_SLEEP).execute();
+		Response res = HttpsUtil.connect(parentIdUrl).proxy(proxyHost, proxyPort).cookies(cookies)
+				.retry(MAX_RETRY, MILLISECONDS_SLEEP).execute();
 		if (!URIUtil.statusIsOK(res.statusCode())) {
 			System.out.println("连接URL失败：" + parentIdUrl);
 			return imagesInfo;
@@ -163,7 +180,8 @@ public class YandeSubfunction {
 					return GetParentImagesInfo(new_parent_imageid, childrenImageidLists);
 				}
 			}
-			if (bypass_blacklabels && Arrays.stream(post.getString("tags").split(" ")).anyMatch(l -> blacklabels.contains(l))) {
+			if (bypass_blacklabels
+					&& Arrays.stream(post.getString("tags").split(" ")).anyMatch(l -> blacklabels.contains(l))) {
 				continue;
 			}
 			if (bypass_usedid && usedIds.contains(imageid)) {
@@ -177,7 +195,8 @@ public class YandeSubfunction {
 	}
 
 	public static List<JSONObject> GetHeatdayImagesInfo(int year, int month, int day) {
-		String heatdayUrl = "https://yande.re/post/popular_by_day.json?day=" + day + "&month=" + month + "&year=" + year;
+		String heatdayUrl = "https://yande.re/post/popular_by_day.json?day=" + day + "&month=" + month + "&year="
+				+ year;
 		List<JSONObject> imagesInfo = new CopyOnWriteArrayList<>();
 		Response res = conn.url(heatdayUrl).execute();
 		if (!URIUtil.statusIsOK(res.statusCode())) {
@@ -191,7 +210,8 @@ public class YandeSubfunction {
 				if (bypass_low_quality && Integer.parseInt(imageid) < MAX_LOW_QUALITY) {
 					return;
 				}
-				if (bypass_blacklabels && Arrays.stream(post.getString("tags").split(" ")).anyMatch(l -> blacklabels.contains(l))) {
+				if (bypass_blacklabels
+						&& Arrays.stream(post.getString("tags").split(" ")).anyMatch(l -> blacklabels.contains(l))) {
 					return;
 				}
 				String parentImageid = post.getString("parent_id");
@@ -215,12 +235,13 @@ public class YandeSubfunction {
 	public static void download(JSONObject imageInfo) {
 		String imageid = imageInfo.getString("id");
 		String imageidUrl = "https://yande.re/post/show/" + imageid;
-		logger.info("正在下载 ID: " + imageid + " URL: " + imageidUrl);
+		logger.info("正在下载: " + imageidUrl);
 		usedIds.add(imageid);
 		String imageUrl = imageInfo.getString("file_url");
 		String md5 = imageInfo.getString("md5");
-		SionConnection conn = SionDownload.connect(imageUrl).proxy(proxyHost, proxyPort).hash(md5).retry(MAX_RETRY, MILLISECONDS_SLEEP).thread(DOWN_THREADS)
-										  .folder(image_folderPath);
+		SionConnection conn = SionDownload.connect(imageUrl).proxy(proxyHost, proxyPort).hash(md5)
+				.retry(MAX_RETRY, MILLISECONDS_SLEEP).thread(DOWN_THREADS)
+				.folder(image_folderPath);
 		SionResponse res;
 		int statusCode;
 		do {

@@ -2,7 +2,7 @@ package org.haic.png.Pixiv;
 
 
 import org.haic.often.thread.ConsumerThread;
-import org.haic.often.tuple.ThreeTuple;
+import org.haic.often.tuple.record.ThreeTuple;
 import org.haic.often.util.FileUtil;
 import org.haic.often.util.ReadWriteUtil;
 import org.haic.often.util.ThreadUtil;
@@ -63,7 +63,7 @@ public class PixivImagesDownload {
 			String authorsUid = authorsUids.get(i);
 			System.out.print("[Schedule] 正在下载 Pixiv 作者图片,当前作者UID: " + authorsUid + " 进度：" + (i + 1) + "/" + len);
 			Set<ThreeTuple<String, List<String>, String>> imagesInfo = PixivSubfunction.GetAuthorInfos(authorsUid);
-			System.out.println(" 图片数量：" + imagesInfo.stream().mapToInt(l -> l.second.size()).sum());
+			System.out.println(" 图片数量：" + imagesInfo.stream().mapToInt(l -> l.second().size()).sum());
 			MultiThreadDownload(imagesInfo);
 		}
 	}
@@ -132,8 +132,8 @@ public class PixivImagesDownload {
 	private static void MultiThreadDownload(Set<ThreeTuple<String, List<String>, String>> imagesInfo) {
 		ExecutorService executorService = Executors.newFixedThreadPool(MAX_THREADS);
 		for (ThreeTuple<String, List<String>, String> imageInfo : imagesInfo) {
-			executorService.execute(new ConsumerThread<>(imageInfo, (info) -> { // 执行多线程程
-				PixivSubfunction.download(info.first, info.second, info.third);
+			executorService.execute(new ConsumerThread(imageInfo, (info) -> { // 执行多线程程
+				PixivSubfunction.download(info.first(), info.second(), info.third());
 			}));
 		}
 		ThreadUtil.waitEnd(executorService); // 等待线程结束
@@ -142,8 +142,8 @@ public class PixivImagesDownload {
 	private static void MultiThreadNoSuffixDownload(Set<ThreeTuple<String, List<String>, String>> imagesInfo) {
 		ExecutorService executorService = Executors.newFixedThreadPool(MAX_THREADS);
 		for (ThreeTuple<String, List<String>, String> imageInfo : imagesInfo) {
-			executorService.execute(new ConsumerThread<>(imageInfo, (info) -> { // 执行多线程程
-				PixivSubfunction.noSuffixDownload(info.first, info.second, info.third);
+			executorService.execute(new ConsumerThread(imageInfo, (info) -> { // 执行多线程程
+				PixivSubfunction.noSuffixDownload(info.first(), info.second(), info.third());
 			}));
 		}
 		ThreadUtil.waitEnd(executorService); // 等待线程结束

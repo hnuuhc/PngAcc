@@ -15,7 +15,7 @@ public class App {
 	public static String proxyHost = "127.0.0.1"; // 代理主机
 	public static int proxyPort = 7890; // 代理端口
 
-	public static int MAX_THREADS = 4; // 多线程下载,建议4-8
+	public static int MAX_THREADS = 5; // 多线程下载,建议4-8
 	public static int DOWN_THREADS = 2; // 单文件下载线程
 	public static boolean MAX_RETRY = true; // 无限重试
 	public static int MILLISECONDS_SLEEP = 1000; // 重试间隔时间(毫秒)
@@ -98,9 +98,9 @@ public class App {
 
 	public static int yande_api_maxthreads = 40; // 访问API最大线程
 	public static int yande_api_limit = 1000; // API单页获取数量限制,最大值为1000
-	// 350001
+	public static int yande_global_site = 10000; // 全局方式模式时获取数据条目数量
+	// 370001
 	public static int yande_global_min_site = 0; // 全局方式模式时获取数据条目最小起始位
-	public static int yande_global_max_site = 10000; // 全局方式模式时获取数据条目结束位
 
 	public static void main(String[] args) {
 		ChildRout.initialization(); // 初始化
@@ -115,4 +115,5 @@ public class App {
 		// PixivImagesDownload.label(); // Pixiv 标签
 		System.exit(0);
 	}
+
 }

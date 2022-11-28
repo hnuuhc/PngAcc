@@ -2,7 +2,7 @@ package org.haic.png.Sankaku;
 
 
 import org.haic.often.thread.ConsumerThread;
-import org.haic.often.tuple.ThreeTuple;
+import org.haic.often.tuple.record.ThreeTuple;
 import org.haic.often.util.FileUtil;
 import org.haic.often.util.ReadWriteUtil;
 import org.haic.often.util.ThreadUtil;
@@ -35,8 +35,8 @@ public class SankakuImagesDownload {
 			Set<ThreeTuple<String, String, String>> imagesInfo = SankakuSubfunction.getLabelInfo(whitelabel);
 			ExecutorService executorService = Executors.newFixedThreadPool(MAX_THREADS);
 			for (ThreeTuple<String, String, String> imageInfo : imagesInfo) {
-				executorService.execute(new ConsumerThread<>(imageInfo, (info) -> { // 执行多线程程
-					SankakuSubfunction.download(info.first, info.second, info.third);
+				executorService.execute(new ConsumerThread(imageInfo, (info) -> { // 执行多线程程
+					SankakuSubfunction.download(info.first(), info.second(), info.third());
 				}));
 			}
 			ThreadUtil.waitEnd(executorService); // 等待线程结束

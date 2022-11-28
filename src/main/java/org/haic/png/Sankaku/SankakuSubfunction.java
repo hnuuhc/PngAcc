@@ -1,7 +1,13 @@
 package org.haic.png.Sankaku;
 
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
 import org.haic.often.Judge;
 import org.haic.often.logger.Logger;
@@ -9,18 +15,16 @@ import org.haic.often.logger.LoggerFactory;
 import org.haic.often.net.URIUtil;
 import org.haic.often.net.download.SionDownload;
 import org.haic.often.net.http.JsoupUtil;
-import org.haic.often.tuple.ThreeTuple;
 import org.haic.often.tuple.Tuple;
+import org.haic.often.tuple.record.ThreeTuple;
 import org.haic.often.util.FileUtil;
 import org.haic.often.util.ReadWriteUtil;
 import org.haic.png.App;
 import org.haic.png.ChildRout;
 import org.jsoup.nodes.Document;
 
-
-import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.stream.Collectors;
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
 
 public class SankakuSubfunction {
 
@@ -57,14 +61,16 @@ public class SankakuSubfunction {
 			cookies = SankakuLogin.GetCookies();
 			blacklabels = ReadWriteUtil.orgin(blacklabels_filePath).readAsLine();
 			blacklabels.replaceAll(label -> label.replaceAll(" ", "_"));
-			usedIds = ReadWriteUtil.orgin(already_usedid_filePath).readAsLine().parallelStream().map(info -> info.split(" ")[0]).collect(Collectors.toList());
+			usedIds = ReadWriteUtil.orgin(already_usedid_filePath).readAsLine().parallelStream()
+					.map(info -> info.split(" ")[0]).collect(Collectors.toList());
 			isInitialization = true;
 		}
 	}
 
 	public static String getImageUrl(String imageid) {
-		Document labelurl_doc = JsoupUtil.connect(sankaku_url + "cn/post/show/" + imageid).timeout(12000).proxy(proxyHost, proxyPort).cookies(cookies)
-										 .retry(MAX_RETRY, MILLISECONDS_SLEEP).get();
+		Document labelurl_doc = JsoupUtil.connect(sankaku_url + "cn/post/show/" + imageid).timeout(12000)
+				.proxy(proxyHost, proxyPort).cookies(cookies)
+				.retry(MAX_RETRY, MILLISECONDS_SLEEP).get();
 		return "https:" + Objects.requireNonNull(labelurl_doc.selectFirst("a[id='image-link']")).attr("href");
 	}
 
@@ -74,7 +80,8 @@ public class SankakuSubfunction {
 
 	private static Set<ThreeTuple<String, String, String>> getLabelInfo(String whitelabel, String label_api_url) {
 		Set<ThreeTuple<String, String, String>> imagesInfo = new HashSet<>();
-		Document document = JsoupUtil.connect(label_api_url).timeout(12000).proxy(proxyHost, proxyPort).cookies(cookies).retry(MAX_RETRY, MILLISECONDS_SLEEP)
+		Document document = JsoupUtil.connect(label_api_url).timeout(12000).proxy(proxyHost, proxyPort).cookies(cookies)
+				.retry(MAX_RETRY, MILLISECONDS_SLEEP)
 				.get();
 		JSONObject jsonObject = JSONObject.parseObject(document.text());
 		String next = JSONObject.parseObject(jsonObject.getString("meta")).getString("next");
@@ -83,8 +90,7 @@ public class SankakuSubfunction {
 			imagesInfo.addAll(getLabelInfo(whitelabel, next_label_api_url));
 		}
 		JSONArray jsonArray = jsonObject.getJSONArray("data");// 获取数组
-		for_jsonArray:
-		for (int i = 0; i < jsonArray.size(); i++) {
+		for_jsonArray: for (int i = 0; i < jsonArray.size(); i++) {
 			JSONObject data_jsonObject = jsonArray.getJSONObject(i);
 			String imageid = data_jsonObject.getString("id");
 			if (bypass_usedid && usedIds.contains(imageid)) {
@@ -122,11 +128,12 @@ public class SankakuSubfunction {
 
 	public static void download(String imageid, String imageUrl, String filename) {
 		String imageidUrl = sankaku_url + "cn/post/show/" + imageid;
-		logger.info("正在下载 ID: " + imageid + " URL: " + imageidUrl);
+		logger.info("正在下载: " + imageidUrl);
 		usedIds.add(imageid);
 		imageUrl = Judge.isEmpty(imageUrl) ? getImageUrl(imageid) : imageUrl;
-		int statusCode = SionDownload.connect(imageUrl).proxy(proxyHost, proxyPort).fileName(filename).thread(DOWN_THREADS).retry(MAX_RETRY, MILLISECONDS_SLEEP)
-									 .folder(image_folderPath).execute().statusCode();
+		int statusCode = SionDownload.connect(imageUrl).proxy(proxyHost, proxyPort).fileName(filename)
+				.thread(DOWN_THREADS).retry(MAX_RETRY, MILLISECONDS_SLEEP)
+				.folder(image_folderPath).execute().statusCode();
 		if (URIUtil.statusIsOK(statusCode)) {
 			App.imageCount.addAndGet(1);
 			if (record_usedid) {
