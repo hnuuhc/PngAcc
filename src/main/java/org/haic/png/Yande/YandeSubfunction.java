@@ -21,7 +21,6 @@ import org.haic.often.net.download.SionResponse;
 import org.haic.often.net.http.Connection;
 import org.haic.often.net.http.HttpStatus;
 import org.haic.often.net.http.HttpsUtil;
-import org.haic.often.net.http.JsoupUtil;
 import org.haic.often.net.http.Response;
 import org.haic.often.thread.ConsumerThread;
 import org.haic.often.util.FileUtil;
@@ -90,7 +89,7 @@ public class YandeSubfunction {
 			executorService.execute(new ConsumerThread(i, (index) -> { // 执行多线程程
 				String whitelabelUrl = "https://yande.re/post.json?tags=" + whitelabel + "&page=" + index + "&limit="
 						+ limit;
-				Response labelInfo = JsoupUtil.connect(whitelabelUrl).proxy(proxyHost, proxyPort).cookies(cookies)
+				Response labelInfo = HttpsUtil.connect(whitelabelUrl).proxy(proxyHost, proxyPort).cookies(cookies)
 						.retryStatusCodes(502)
 						.retry(MAX_RETRY, MILLISECONDS_SLEEP).execute();
 				for (JSONObject post : JSONArray.parseArray(labelInfo.body()).toList(JSONObject.class)) {

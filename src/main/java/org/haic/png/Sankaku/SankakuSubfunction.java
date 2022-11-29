@@ -13,15 +13,15 @@ import org.haic.often.Judge;
 import org.haic.often.logger.Logger;
 import org.haic.often.logger.LoggerFactory;
 import org.haic.often.net.URIUtil;
+import org.haic.often.net.analyze.nodes.Document;
 import org.haic.often.net.download.SionDownload;
-import org.haic.often.net.http.JsoupUtil;
+import org.haic.often.net.http.HttpsUtil;
 import org.haic.often.tuple.Tuple;
 import org.haic.often.tuple.record.ThreeTuple;
 import org.haic.often.util.FileUtil;
 import org.haic.often.util.ReadWriteUtil;
 import org.haic.png.App;
 import org.haic.png.ChildRout;
-import org.jsoup.nodes.Document;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
@@ -68,9 +68,9 @@ public class SankakuSubfunction {
 	}
 
 	public static String getImageUrl(String imageid) {
-		Document labelurl_doc = JsoupUtil.connect(sankaku_url + "cn/post/show/" + imageid).timeout(12000)
-				.proxy(proxyHost, proxyPort).cookies(cookies)
-				.retry(MAX_RETRY, MILLISECONDS_SLEEP).get();
+		Document labelurl_doc = HttpsUtil.connect(sankaku_url + "cn/post/show/" + imageid).timeout(12000)
+										 .proxy(proxyHost, proxyPort).cookies(cookies)
+										 .retry(MAX_RETRY, MILLISECONDS_SLEEP).get();
 		return "https:" + Objects.requireNonNull(labelurl_doc.selectFirst("a[id='image-link']")).attr("href");
 	}
 
@@ -80,7 +80,7 @@ public class SankakuSubfunction {
 
 	private static Set<ThreeTuple<String, String, String>> getLabelInfo(String whitelabel, String label_api_url) {
 		Set<ThreeTuple<String, String, String>> imagesInfo = new HashSet<>();
-		Document document = JsoupUtil.connect(label_api_url).timeout(12000).proxy(proxyHost, proxyPort).cookies(cookies)
+		Document document = HttpsUtil.connect(label_api_url).timeout(12000).proxy(proxyHost, proxyPort).cookies(cookies)
 				.retry(MAX_RETRY, MILLISECONDS_SLEEP)
 				.get();
 		JSONObject jsonObject = JSONObject.parseObject(document.text());

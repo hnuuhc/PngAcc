@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.haic.often.net.Method;
-import org.haic.often.net.http.JsoupUtil;
+import org.haic.often.net.http.HttpsUtil;
 import org.haic.often.util.FileUtil;
 import org.haic.often.util.ReadWriteUtil;
 import org.haic.often.util.ThreadUtil;
@@ -80,7 +80,7 @@ public class ChildRout {
 		params.put("user[name]", userName);
 		params.put("user[password]", password);
 		String loginUrl = domin + "user/authenticate";
-		return JsoupUtil.connect(loginUrl).timeout(10000).data(params).proxy(App.proxyHost, App.proxyPort)
+		return HttpsUtil.connect(loginUrl).timeout(10000).data(params).proxy(App.proxyHost, App.proxyPort)
 						.retry(2, App.MILLISECONDS_SLEEP).failThrow(true)
 						.method(Method.POST).execute().cookies();
 	}
