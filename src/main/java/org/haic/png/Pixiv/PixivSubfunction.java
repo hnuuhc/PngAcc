@@ -17,11 +17,12 @@ import org.haic.often.logger.Logger;
 import org.haic.often.logger.LoggerFactory;
 import org.haic.often.net.Method;
 import org.haic.often.net.URIUtil;
-import org.haic.often.net.analyze.nodes.Document;
+
 import org.haic.often.net.download.SionConnection;
 import org.haic.often.net.download.SionDownload;
 import org.haic.often.net.download.SionResponse;
 import org.haic.often.net.http.HttpsUtil;
+import org.haic.often.parser.xml.Document;
 import org.haic.often.thread.ConsumerThread;
 import org.haic.often.tuple.Tuple;
 import org.haic.often.tuple.record.ThreeTuple;
