@@ -22,6 +22,8 @@ import org.haic.often.net.download.SionConnection;
 import org.haic.often.net.download.SionDownload;
 import org.haic.often.net.download.SionResponse;
 import org.haic.often.net.http.HttpsUtil;
+import org.haic.often.parser.json.JSONArray;
+import org.haic.often.parser.json.JSONObject;
 import org.haic.often.parser.xml.Document;
 import org.haic.often.thread.ConsumerThread;
 import org.haic.often.tuple.Tuple;
@@ -32,9 +34,6 @@ import org.haic.often.util.StringUtil;
 import org.haic.often.util.ThreadUtil;
 import org.haic.png.App;
 import org.haic.png.ChildRout;
-
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
 
 public class PixivSubfunction {
 
@@ -80,7 +79,7 @@ public class PixivSubfunction {
 					HttpsUtil.connect(domain).cookies(cookies).proxy(proxyHost, proxyPort)
 							.retry(MAX_RETRY, MILLISECONDS_SLEEP).get()
 							.selectFirst("meta[id='meta-global-data']"))
-					.attr("content")).getString("token");
+														 .attr("content")).getString("token");
 			isInitialization = true;
 		}
 	}
@@ -103,7 +102,7 @@ public class PixivSubfunction {
 				JSONArray data = JSONObject.parseObject(JSONObject.parseObject(JSONObject.parseObject(
 						HttpsUtil.connect(url).proxy(proxyHost, proxyPort).cookies(cookies)
 								.retry(MAX_RETRY, MILLISECONDS_SLEEP).get().text())
-						.getString("body")).getString("illustManga")).getJSONArray("data");// 获取数组
+																						 .getString("body")).getString("illustManga")).getJSONArray("data");// 获取数组
 				imagesInfo.addAll(imageInfosOfJSONArray(data));
 			}));
 		}

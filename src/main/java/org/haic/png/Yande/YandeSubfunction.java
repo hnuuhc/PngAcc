@@ -22,6 +22,8 @@ import org.haic.often.net.http.Connection;
 import org.haic.often.net.http.HttpStatus;
 import org.haic.often.net.http.HttpsUtil;
 import org.haic.often.net.http.Response;
+import org.haic.often.parser.json.JSONArray;
+import org.haic.often.parser.json.JSONObject;
 import org.haic.often.thread.ConsumerThread;
 import org.haic.often.util.FileUtil;
 import org.haic.often.util.ListUtil;
@@ -30,8 +32,6 @@ import org.haic.often.util.ThreadUtil;
 import org.haic.png.App;
 import org.haic.png.ChildRout;
 
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
 
 public class YandeSubfunction {
 
@@ -115,7 +115,7 @@ public class YandeSubfunction {
 	public static List<JSONObject> GetLabelImagesInfoAsGlobal(List<String> whitelabels) {
 		String limitUrl = "https://yande.re/post.xml?limit=1";
 		int max_amount = Integer
-				.parseInt(Objects.requireNonNull(conn.url(limitUrl).get().selectFirst("posts")).attr("count"));
+				.parseInt(conn.url(limitUrl).get().selectFirst("posts").attr("count"));
 		int min_site = Math.max(global_min_site, 0);
 		int max_site = Math.min(global_min_site + global_site, max_amount);
 		List<JSONObject> imagesInfo = new CopyOnWriteArrayList<>();

@@ -11,13 +11,12 @@ import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import org.haic.often.parser.json.JSONObject;
 import org.haic.often.util.FileUtil;
 import org.haic.often.util.ReadWriteUtil;
 import org.haic.often.util.ThreadUtil;
 import org.haic.png.App;
 import org.haic.png.ChildRout;
-
-import com.alibaba.fastjson2.JSONObject;
 
 public class YandeImagesDownload {
 
