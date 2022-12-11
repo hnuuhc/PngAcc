@@ -4,12 +4,13 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.haic.often.annotations.NotNull;
 import org.haic.often.net.Method;
 import org.haic.often.net.http.HttpsUtil;
 import org.haic.often.util.FileUtil;
 import org.haic.often.util.ReadWriteUtil;
 import org.haic.often.util.ThreadUtil;
-import org.jetbrains.annotations.NotNull;
+
 
 public class ChildRout {
 
@@ -75,7 +76,7 @@ public class ChildRout {
 	 * @return cookies
 	 */
 	public static Map<String, String> GetLoginCookies(@NotNull String domin, @NotNull String userName,
-			@NotNull String password) {
+													  @NotNull String password) {
 		Map<String, String> params = new HashMap<>();
 		params.put("user[name]", userName);
 		params.put("user[password]", password);
