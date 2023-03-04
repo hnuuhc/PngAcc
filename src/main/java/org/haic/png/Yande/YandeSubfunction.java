@@ -32,7 +32,6 @@ import org.haic.often.util.ThreadUtil;
 import org.haic.png.App;
 import org.haic.png.ChildRout;
 
-
 public class YandeSubfunction {
 
 	private static final boolean record_usedid = App.yande_record_usedid; // 记录已下载的图片ID
@@ -51,8 +50,6 @@ public class YandeSubfunction {
 	private static final int MILLISECONDS_SLEEP = App.MILLISECONDS_SLEEP; // 程序等待
 	private static final int API_MAX_THREADS = App.yande_api_maxthreads; // 访问API最大线程
 	private static final int limit = App.yande_api_limit; // API单页获取数量限制
-	private static final int global_min_site = App.yande_global_min_site;
-	private static final int global_site = App.yande_global_site;
 	private static final int MAX_LOW_QUALITY = 250000;
 
 	private static boolean isInitialization; // 判断参数是否已初始化
@@ -112,17 +109,17 @@ public class YandeSubfunction {
 		return new ArrayList<>(imagesInfo);
 	}
 
-	public static List<JSONObject> GetLabelImagesInfoAsGlobal(List<String> whitelabels) {
+	public static List<JSONObject> GetLabelImagesInfoAsGlobal(List<String> whitelabels, int start, int len) {
 		String limitUrl = "https://yande.re/post.xml?limit=1";
 		int max_amount = Integer
 				.parseInt(conn.url(limitUrl).get().selectFirst("posts").attr("count"));
-		int min_site = Math.max(global_min_site, 0);
-		int max_site = Math.min(global_min_site + global_site, max_amount);
+		int min_site = Math.max(start, 0);
+		int max_site = Math.min(start + len, max_amount);
 		List<JSONObject> imagesInfo = new CopyOnWriteArrayList<>();
-		int start = Math.max((int) Math.ceil((double) min_site / limit), 1);
+		int site_start = Math.max((int) Math.ceil((double) min_site / limit), 1);
 		int page = (int) Math.ceil((double) max_site / limit);
 		ExecutorService executorService = Executors.newFixedThreadPool(API_MAX_THREADS); // 限制多线程
-		for (int i = start; i <= page; i++, ThreadUtil.waitThread(36)) { // 20w是最大值
+		for (int i = site_start; i <= page; i++, ThreadUtil.waitThread(36)) { // 20w是最大值
 			executorService.execute(new ConsumerThread(i, (index) -> { // 执行多线程程
 				String postUrl = "https://yande.re/post.json?page=" + index + "&limit=" + limit;
 				Response res = HttpsUtil.connect(postUrl).proxy(proxyHost, proxyPort).cookies(cookies)

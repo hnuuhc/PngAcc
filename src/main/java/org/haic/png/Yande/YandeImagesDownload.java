@@ -25,7 +25,6 @@ public class YandeImagesDownload {
 	private static final boolean record_date = App.yande_record_date; // 记录已完成的日期
 	private static final boolean bypass_record_date = App.yande_bypass_record_date; // 跳过记录的日期
 	private static final boolean unbypass_within_aweek = App.yande_unbypass_within_aweek; // 不跳过一星期内的日期
-	private static final boolean global_label = App.yande_global_label;
 
 	private static final String start_date = App.yande_start_date; // 开始日期
 	private static final String image_folderPath = FileUtil.getAbsolutePath(App.yande_image_folderPath); // 图片文件夹
@@ -52,33 +51,43 @@ public class YandeImagesDownload {
 				whitelabels.remove(whitelabel);
 			}
 		}
-		if (global_label) {
-			System.out.print("[Schedule] 正在下载 Yande 标签白名单图片");
-			List<JSONObject> imagesInfo = YandeSubfunction.GetLabelImagesInfoAsGlobal(whitelabels);
+		int len = whitelabels.size();
+		for (int i = 0; i < len; i++) {
+			String whitelabel = whitelabels.get(i);
+			System.out.print("[Schedule] 正在下载 Yande 标签白名单图片,当前标签: " + whitelabel + " 进度：" + (i + 1) + "/" + len);
+			List<JSONObject> imagesInfo = YandeSubfunction.GetLabelImagesInfo(whitelabel);
 			imagesInfo = imagesInfo.stream()
 					.sorted(Comparator.comparing(l -> l.getInteger("id"), Comparator.reverseOrder()))
 					.collect(Collectors.toList());
 			System.out.println(" 图片数量：" + imagesInfo.size() + " 存储路径: " + image_folderPath);
 			download.accept(imagesInfo);
-		} else {
-			int len = whitelabels.size();
-			for (int i = 0; i < len; i++) {
-				String whitelabel = whitelabels.get(i);
-				System.out.print("[Schedule] 正在下载 Yande 标签白名单图片,当前标签: " + whitelabel + " 进度：" + (i + 1) + "/" + len);
-				List<JSONObject> imagesInfo = YandeSubfunction.GetLabelImagesInfo(whitelabel);
-				imagesInfo = imagesInfo.stream()
-						.sorted(Comparator.comparing(l -> l.getInteger("id"), Comparator.reverseOrder()))
-						.collect(Collectors.toList());
-				System.out.println(" 图片数量：" + imagesInfo.size() + " 存储路径: " + image_folderPath);
-				download.accept(imagesInfo);
-			}
 		}
+
 	}
 
-	public static void blackGlobal() {
+	public static void label(int start, int len) {
+		YandeSubfunction.initialization(); // 初始化参数
+		List<String> whitelabels = ReadWriteUtil.orgin(whitelabels_filePath).readAsLine();
+		whitelabels.replaceAll(LabelWhite -> LabelWhite.replaceAll(" ", "_"));
+		for (String whitelabel : whitelabels) {
+			if (YandeSubfunction.blacklabels.contains(whitelabel)) {
+				System.out.println("标签冲突,白名单和黑名单存在相同值: " + whitelabel);
+				whitelabels.remove(whitelabel);
+			}
+		}
+		System.out.print("[Schedule] 正在下载 Yande 标签白名单图片");
+		List<JSONObject> imagesInfo = YandeSubfunction.GetLabelImagesInfoAsGlobal(whitelabels, start, len);
+		imagesInfo = imagesInfo.stream()
+				.sorted(Comparator.comparing(l -> l.getInteger("id"), Comparator.reverseOrder()))
+				.collect(Collectors.toList());
+		System.out.println(" 图片数量：" + imagesInfo.size() + " 存储路径: " + image_folderPath);
+		download.accept(imagesInfo);
+	}
+
+	public static void blackGlobal(int start, int len) {
 		YandeSubfunction.initialization(); // 初始化参数
 		System.out.print("[Schedule] 正在下载 Yande 图片");
-		List<JSONObject> imagesInfo = YandeSubfunction.GetLabelImagesInfoAsGlobal(new ArrayList<>());
+		List<JSONObject> imagesInfo = YandeSubfunction.GetLabelImagesInfoAsGlobal(new ArrayList<>(), start, len);
 		imagesInfo = imagesInfo.stream()
 				.sorted(Comparator.comparing(l -> l.getInteger("id"), Comparator.reverseOrder()))
 				.collect(Collectors.toList());

@@ -88,7 +88,6 @@ public class App {
 	public static boolean yande_bypass_usedid = true; // 跳过已记录的图片ID
 	public static boolean yande_bypass_blacklabels = true; // 跳过黑名单标签
 	public static boolean yande_bypass_low_quality = true; // 跳过早期低质量图片
-	public static boolean yande_global_label = true; // 全局方式更新前n条数据的白名单标签图片,在标签过多时可有效提升效率
 
 	public static String yande_whitelabels_filePath = "data/YandeData/Yande_WhiteLabels.txt"; // 白名单文件
 	public static String yande_blacklabels_filePath = "data/YandeData/Yande_BlackLabels.txt"; // 黑名单文件
@@ -98,15 +97,12 @@ public class App {
 
 	public static int yande_api_maxthreads = 40; // 访问API最大线程
 	public static int yande_api_limit = 1000; // API单页获取数量限制,最大值为1000
-	public static int yande_global_site = 10000; // 全局方式模式时获取数据条目数量
-	// 370001
-	public static int yande_global_min_site = 0; // 全局方式模式时获取数据条目最小起始位
 
 	public static void main(String[] args) {
 		ChildRout.initialization(); // 初始化
 		// YandeImagesDownload.popularDaily(); // Yande 每日热门
-		// YandeImagesDownload.label(); // Yande 标签
-		YandeImagesDownload.blackGlobal(); // Yande 最新图片(排除黑名单标签)
+		// YandeImagesDownload.label(0,10000); // Yande 标签 去除参数为按标签获取(标签过多时效率极低)
+		YandeImagesDownload.blackGlobal(0, 10000); // Yande 最新图片(排除黑名单标签) 参数: 1.起始位 2.长度
 		// SankakuImagesDownload.label(); // Sankaku 标签
 		// PixivImagesDownload.popularDaily(); // Pixiv 每日热门
 		// PixivImagesDownload.suggestion(); // Pixiv 推荐
