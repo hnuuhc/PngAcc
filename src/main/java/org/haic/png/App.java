@@ -3,6 +3,7 @@ package org.haic.png;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.haic.png.Pixiv.PixivImagesDownload;
 import org.haic.png.Sankaku.SankakuLogin;
 import org.haic.png.Yande.YandeImagesDownload;
 
@@ -106,7 +107,7 @@ public class App {
 		// SankakuImagesDownload.label(); // Sankaku 标签
 		// PixivImagesDownload.popularDaily(); // Pixiv 每日热门
 		// PixivImagesDownload.suggestion(); // Pixiv 推荐
-		// PixivImagesDownload.author(); // Pixiv 作者
+		//PixivImagesDownload.author(); // Pixiv 作者
 		// PixivImagesDownload.optimal(); // Pixiv 最佳
 		// PixivImagesDownload.label(); // Pixiv 标签
 		System.exit(0);

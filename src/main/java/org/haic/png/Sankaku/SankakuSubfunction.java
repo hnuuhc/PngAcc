@@ -17,7 +17,6 @@ import org.haic.often.net.download.SionDownload;
 import org.haic.often.net.http.HttpsUtil;
 import org.haic.often.parser.json.JSONArray;
 import org.haic.often.parser.json.JSONObject;
-import org.haic.often.parser.xml.Document;
 import org.haic.often.tuple.Tuple;
 import org.haic.often.tuple.record.ThreeTuple;
 import org.haic.often.util.FileUtil;
@@ -67,9 +66,7 @@ public class SankakuSubfunction {
 	}
 
 	public static String getImageUrl(String imageid) {
-		Document labelurl_doc = HttpsUtil.connect(sankaku_url + "cn/post/show/" + imageid).timeout(12000)
-										 .proxy(proxyHost, proxyPort).cookies(cookies)
-										 .retry(MAX_RETRY, MILLISECONDS_SLEEP).get();
+		var labelurl_doc = HttpsUtil.connect(sankaku_url + "cn/post/show/" + imageid).timeout(12000).proxy(proxyHost, proxyPort).cookies(cookies).retry(MAX_RETRY, MILLISECONDS_SLEEP).get().parse();
 		return "https:" + Objects.requireNonNull(labelurl_doc.selectFirst("a[id='image-link']")).attr("href");
 	}
 
@@ -79,11 +76,10 @@ public class SankakuSubfunction {
 
 	private static Set<ThreeTuple<String, String, String>> getLabelInfo(String whitelabel, String label_api_url) {
 		Set<ThreeTuple<String, String, String>> imagesInfo = new HashSet<>();
-		Document document = HttpsUtil.connect(label_api_url).timeout(12000).proxy(proxyHost, proxyPort).cookies(cookies)
+		var jsonObject = HttpsUtil.connect(label_api_url).timeout(12000).proxy(proxyHost, proxyPort).cookies(cookies)
 				.retry(MAX_RETRY, MILLISECONDS_SLEEP)
-				.get();
-		JSONObject jsonObject = JSONObject.parseObject(document.text());
-		String next = JSONObject.parseObject(jsonObject.getString("meta")).getString("next");
+				.get().json();
+		var next = JSONObject.parseObject(jsonObject.getString("meta")).getString("next");
 		if (next != null) {
 			String next_label_api_url = sankaku_api_url + "?tags=" + whitelabel + "&limit=" + limit + "&next=" + next;
 			imagesInfo.addAll(getLabelInfo(whitelabel, next_label_api_url));

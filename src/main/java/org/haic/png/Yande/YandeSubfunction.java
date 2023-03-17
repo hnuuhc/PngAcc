@@ -78,19 +78,17 @@ public class YandeSubfunction {
 
 	public static List<JSONObject> GetLabelImagesInfo(String whitelabel) {
 		List<JSONObject> imagesInfo = new CopyOnWriteArrayList<>();
-		String url = "https://yande.re/post.xml?tags=" + whitelabel + "&limit=1";
-		int postCount = Integer
-				.parseInt(Objects.requireNonNull(conn.url(url).get().selectFirst("posts")).attr("count"));
-		ExecutorService executorService = Executors.newFixedThreadPool(API_MAX_THREADS); // 限制多线程
+		var url = "https://yande.re/post.xml?tags=" + whitelabel + "&limit=1";
+		int postCount = Integer.parseInt(Objects.requireNonNull(conn.url(url).get().parse().selectFirst("posts")).attr("count"));
+		var executorService = Executors.newFixedThreadPool(API_MAX_THREADS); // 限制多线程
 		for (int i = 1; i <= (int) Math.ceil((double) postCount / (double) limit); i++, ThreadUtil.waitThread(36)) {
 			executorService.execute(new ConsumerThread(i, (index) -> { // 执行多线程程
-				String whitelabelUrl = "https://yande.re/post.json?tags=" + whitelabel + "&page=" + index + "&limit="
+				var whitelabelUrl = "https://yande.re/post.json?tags=" + whitelabel + "&page=" + index + "&limit="
 						+ limit;
-				Response labelInfo = HttpsUtil.connect(whitelabelUrl).proxy(proxyHost, proxyPort).cookies(cookies)
-						.retryStatusCodes(502)
-						.retry(MAX_RETRY, MILLISECONDS_SLEEP).execute();
-				for (JSONObject post : JSONArray.parseArray(labelInfo.body()).toList(JSONObject.class)) {
-					String imageid = post.getString("id");
+				var labelInfo = HttpsUtil.connect(whitelabelUrl).proxy(proxyHost, proxyPort).cookies(cookies)
+						.retryStatusCodes(502).retry(MAX_RETRY, MILLISECONDS_SLEEP).execute();
+				for (var post : JSONArray.parseArray(labelInfo.body()).toList(JSONObject.class)) {
+					var imageid = post.getString("id");
 					if (bypass_low_quality && Integer.parseInt(imageid) < MAX_LOW_QUALITY) {
 						continue;
 					}
@@ -110,33 +108,32 @@ public class YandeSubfunction {
 	}
 
 	public static List<JSONObject> GetLabelImagesInfoAsGlobal(List<String> whitelabels, int start, int len) {
-		String limitUrl = "https://yande.re/post.xml?limit=1";
-		int max_amount = Integer
-				.parseInt(conn.url(limitUrl).get().selectFirst("posts").attr("count"));
+		var limitUrl = "https://yande.re/post.xml?limit=1";
+		int max_amount = Integer.parseInt(conn.url(limitUrl).get().parse().selectFirst("posts").attr("count"));
 		int min_site = Math.max(start, 0);
 		int max_site = Math.min(start + len, max_amount);
 		List<JSONObject> imagesInfo = new CopyOnWriteArrayList<>();
 		int site_start = Math.max((int) Math.ceil((double) min_site / limit), 1);
 		int page = (int) Math.ceil((double) max_site / limit);
-		ExecutorService executorService = Executors.newFixedThreadPool(API_MAX_THREADS); // 限制多线程
+		var executorService = Executors.newFixedThreadPool(API_MAX_THREADS); // 限制多线程
 		for (int i = site_start; i <= page; i++, ThreadUtil.waitThread(36)) { // 20w是最大值
 			executorService.execute(new ConsumerThread(i, (index) -> { // 执行多线程程
 				String postUrl = "https://yande.re/post.json?page=" + index + "&limit=" + limit;
-				Response res = HttpsUtil.connect(postUrl).proxy(proxyHost, proxyPort).cookies(cookies)
+				var res = HttpsUtil.connect(postUrl).proxy(proxyHost, proxyPort).cookies(cookies)
 						.retryStatusCodes(502)
 						.retry(MAX_RETRY, MILLISECONDS_SLEEP).execute();
 				if (res.statusCode() == 500) {
 					throw new RuntimeException("Status: 500 URL: " + postUrl);
 				}
 				for (JSONObject post : JSONArray.parseArray(res.body()).toList(JSONObject.class)) {
-					String imageid = post.getString("id");
+					var imageid = post.getString("id");
 					if (bypass_low_quality && Integer.parseInt(imageid) < MAX_LOW_QUALITY) {
 						continue;
 					}
 					if (bypass_usedid && usedIds.contains(imageid)) {
 						continue;
 					}
-					String[] labels = post.getString("tags").split(" ");
+					var labels = post.getString("tags").split(" ");
 					if (!whitelabels.isEmpty() && Arrays.stream(labels).noneMatch(whitelabels::contains)) {
 						continue;
 					}
